@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MakefileBuildTargetsManager">
+    <user-build-targets>
+      <build-target name="server">
+        <build-configurations>
+          <build-configuration>
+            <make-targets>
+              <make-target>server</make-target>
+            </make-targets>
+          </build-configuration>
+        </build-configurations>
+      </build-target>
+      <build-target name="client">
+        <build-configurations>
+          <build-configuration>
+            <make-targets>
+              <make-target>client</make-target>
+            </make-targets>
+          </build-configuration>
+        </build-configurations>
+      </build-target>
+    </user-build-targets>
+  </component>
+</project>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CLionExternalBuildManager">
+    <target id="02a9bd42-9b47-4226-91e2-24682505de58" name="Server" defaultType="MAKE">
+      <configuration id="d5e84c2f-a625-433e-9bc0-f6625bdc1060" name="Server">
+        <build type="MAKE">
+          <make targetName="server" />
+        </build>
+      </configuration>
+    </target>
+    <target id="2eeff1ad-380b-469e-9014-51a75ca16b6e" name="Client" defaultType="MAKE">
+      <configuration id="830504e1-4dfd-4709-a19e-2b9a03fbb263" name="Client">
+        <build type="MAKE">
+          <make targetName="client" />
+        </build>
+      </configuration>
+    </target>
+  </component>
+</project>
