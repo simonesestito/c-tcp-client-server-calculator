@@ -1,7 +1,7 @@
 #include <wchar.h>
 #include <locale.h>
 
-int main() {
+int main(int argc, const char **argv) {
     // Dato che verranno usati wchar_t, il terminale deve essere
     // in modalità "wide charset" e serve impostare il locale.
     // Tutte le printf dovranno essere wprintf, altrimenti
