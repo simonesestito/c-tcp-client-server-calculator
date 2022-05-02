@@ -1,0 +1,4 @@
+build/
+client.out
+server.out
+*.log
