@@ -3,7 +3,7 @@ TCP Client/Server Calculator program developed in C, as a homework for the "Oper
 
 ## Homework Report (Italian)
 
-# TODO
+https://docs.google.com/document/d/1wvmyqr00D5ji17bgRmExp-Cw1zBNhOeZGMd4L--hdE8/edit?usp=sharing
 
 ## Run
 
