@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall -O2 -lpthread
+CFLAGS := -Wall -O2 -pthread
 BUILD_DIR=build
 SOURCES := $(wildcard *.c)
 OBJECTS := $(SOURCES:.c=.o)
@@ -12,7 +12,7 @@ clean:
 	rm -rf $(BUILD_DIR)/ $(OUT_EXEC) $(wildcard *.log)
 
 $(OUT_EXEC): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@
+	$(CC) $(CFLAGS) $(OBJECTS) -o $@
 
 build/%.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
