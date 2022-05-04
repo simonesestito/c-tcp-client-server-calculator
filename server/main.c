@@ -8,6 +8,7 @@
 #include <wchar.h>
 #include "socket_utils.h"
 #include "request_worker.h"
+#include "logger.h"
 
 /**
  * Indica se il server è in funzione o deve terminare
@@ -81,7 +82,9 @@ int main(int argc, const char **argv) {
     if (server_socket == -1)
         return show_usage(argv[0], NULL);
 
-    wprintf(L"Processo server (pid=%d) avviato sull'indirizzo IP %s, porta %d\n", getpid(), ip, port);
+    log_message(NULL,
+                L"Processo server (pid=%d) avviato sull'indirizzo IP %s, porta %d\n",
+                getpid(), ip, port);
 
     while (working) {
         // Accetta la prossima richiesta
@@ -96,10 +99,10 @@ int main(int argc, const char **argv) {
 
 void handle_request(int client_socket, const struct sockaddr_in *client) {
     if (!working) {
-        wprintf(L"\n\nChiusura in corso...\n");
+        log_message(NULL, L"\n\nChiusura in corso...\n");
     } else if (client_socket == -1) {
         // Errore nell'accettazione della richiesta
-        perror("Accettazione nuova richiesta TCP");
+        log_errno(NULL, "Accettazione nuova richiesta TCP");
     } else {
         // Gestisci la richiesta su un nuovo thread
         pthread_t request_thread;
@@ -110,13 +113,13 @@ void handle_request(int client_socket, const struct sockaddr_in *client) {
 
         if (socket_file == NULL) {
             // Errore nell'apertura del socket file descriptor in r+
-            perror("Errore nell'apertura del file descriptor della socket");
+            log_errno(NULL, "Errore nell'apertura del file descriptor della socket");
         } else if (pthread_create(&request_thread,
-                           NULL,
-                           (void *(*)(void *)) elaborate_request,
-                           (void *) socket_info) != 0) {
+                                  NULL,
+                                  (void *(*)(void *)) elaborate_request,
+                                  (void *) socket_info) != 0) {
             // Errore nella creazione del thread
-            perror("Errore nella creazione del thread per la gestione della connessione TCP");
+            log_errno(socket_info, "Errore nella creazione del thread per la gestione della connessione TCP");
             fclose(socket_file);
         }
     }

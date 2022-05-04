@@ -1,4 +1,5 @@
 #include "socket_utils.h"
+#include "logger.h"
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -41,26 +42,26 @@ int bind_server(const char *ip, uint16_t port) {
 
     // Prova ad impostare l'indirizzo IP
     if (inet_pton(AF_INET, ip, &(server_address.sin_addr)) != 1) {
-        fprintf(stderr, "ERRORE: Indirizzo IP invalido\n");
+        log_message(NULL, L"ERRORE: Indirizzo IP invalido\n");
         return -1;
     }
 
     // Crea la socket (unnamed)
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd == -1) {
-        perror("Errore nella creazione della socket");
+        log_message(NULL, L"Errore nella creazione della socket");
         return -1;
     }
 
     // Esegui il bind
     if (bind(socket_fd, (const struct sockaddr*) &server_address, sizeof(server_address)) == -1) {
-        perror("Errore nel bind del socket");
+        log_message(NULL, L"Errore nel bind del socket");
         return -1;
     }
 
     // Metti in ascolto
     if (listen(socket_fd, BACKLOG_SIZE) == -1) {
-        perror("Errore nella listen del socket");
+        log_message(NULL, L"Errore nella listen del socket");
         return -1;
     }
 

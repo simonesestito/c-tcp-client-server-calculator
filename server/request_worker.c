@@ -1,17 +1,37 @@
 #include "request_worker.h"
+#include "logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
 #include <errno.h>
+#include <time.h>
 
 /**
- * Esegui il log di error number su stderr, inserendo anche le informazioni sul client.
+ * Elabora il calcolo richiesto dal client.
  *
- * @param client_info Informazioni sul client che ha provocato l'errore
- * @param error_msg Messaggio di errore
+ * Imposta errno in caso di errore.
+ *
+ * @param left Operando di sinistra
+ * @param operator Operatore
+ * @param right Operando di destra
+ * @return Il risultato dell'operazione, oppure 0 in caso di errore impostando errno.
  */
-void perror_socket(const struct sock_info *client_info, const char *error_msg);
+double calculate_operation(operand_t left, char operator, operand_t right) { // TODO: Spostare altrove
+    errno = 0;
+    switch (operator) {
+        case '+':
+            return left + right;
+        case '-':
+            return left - right;
+        case '*':
+            return left * right;
+        case '/':
+            return left / right;
+        default:
+            errno = EINVAL;
+            return 0;
+    }
+}
 
 /**
  * Elabora la connessione / richiesta ricevuta dal client.
@@ -26,30 +46,52 @@ void perror_socket(const struct sock_info *client_info, const char *error_msg);
 void elaborate_request(const struct sock_info *client_info) {
     char *line = NULL;
     size_t line_size = 0;
-    ssize_t chars_read = getline(&line, &line_size, client_info->socket_file);
+    ssize_t chars_read;
 
-    if (chars_read > 0) {
-        // TODO: elabora richiesta
-        fputs(line, client_info->socket_file);
-        fflush(client_info->socket_file);
-    } else if (errno != 0) {
-        perror_socket(client_info, "Impossibile leggere la linea");
+    do {
+        // Ottieni la riga dell'operazione
+        chars_read = getline(&line, &line_size, client_info->socket_file);
+        if (chars_read < 0) break;
+
+        // Rimuovi il \n finale
+        line[chars_read - 1] = '\0';
+
+        // Inizia a calcolare il tempo
+        struct timespec start, end;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+
+        // Effettua il parsing della linea e calcola l'operazione
+        char operator;
+        operand_t left_operand, right_operand;
+        if (sscanf(line, "%c %lf %lf", &operator, &left_operand, &right_operand) < 3) {
+            // Errore nella lettura
+            log_message(client_info, L"%s\n", "Errore nel parsing dell'operazione");
+            errno = 0;
+            continue; // TODO: Che fare? Chiudere connessione?
+        }
+
+        operand_t result = calculate_operation(left_operand, operator, right_operand);
+        if (errno == EINVAL) {
+            log_errno(client_info, "Operazione sconosciuta");
+            errno = 0;
+            continue;  // TODO: Che fare? Chiudere connessione?
+        }
+
+        // Termina il conteggio del tempo
+        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+
+        // Invia la risposta al client
+        // TODO: risposta         long microseconds_elapsed = (end.tv_nsec - start.tv_nsec) / 1000;
+
+        // Tieni traccia nel log
+        log_result(client_info, line, result, &start, &end);
+    } while (chars_read > 0 && errno == 0);
+
+    if (errno != 0) {
+        log_errno(client_info, "Impossibile leggere la linea");
     }
 
+    free(line);
     fclose(client_info->socket_file);
     free((struct sock_info *) client_info);
-}
-
-void perror_socket(const struct sock_info *client_info, const char *error_msg) {
-    // Ottieni l'indirizzo IP come stringa da sin_addr
-    char *ip_address = inet_ntoa(client_info->client_info.sin_addr);
-    uint16_t port = htons(client_info->client_info.sin_port);
-
-    // Concatena le due stringhe
-    size_t full_msg_size = 25 /* Prefisso massimo del messaggio di log */ + strlen(error_msg);
-    char full_msg[full_msg_size];
-    snprintf(full_msg, full_msg_size, "[%s:%d] %s", ip_address, port, error_msg);
-
-    // Output su stderr
-    perror(full_msg);
 }
