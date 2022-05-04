@@ -60,16 +60,17 @@ void log_message(const struct sock_info *client_info, const wchar_t *restrict fo
     // andiamo ad acquisire un lock.
     // Tutte le funzioni che scrivono su stdout o file di log
     // devono volontariamente rispettare questo lock.
-    // TODO: Lock stdout
+    flockfile(stdout);
     wprintf(L"%s ", prefix);
     vwprintf(format, args);
-    // TODO: Unlock stdout
+    funlockfile(stdout);
+
     if (client_info != NULL) {
         // TODO: Su file
-        // TODO: Lock file
+        // TODO: Lock file flockfile
         //  fwprintf(L"%s ", prefix);
         //  vfwprintf(format, args);
-        // TODO: Unlock file
+        // TODO: Unlock file funlockfile
     }
 
     // Dealloca gli argomenti
