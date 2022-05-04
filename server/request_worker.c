@@ -1,37 +1,11 @@
 #include "request_worker.h"
 #include "logger.h"
+#include "calc_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <time.h>
-
-/**
- * Elabora il calcolo richiesto dal client.
- *
- * Imposta errno in caso di errore.
- *
- * @param left Operando di sinistra
- * @param operator Operatore
- * @param right Operando di destra
- * @return Il risultato dell'operazione, oppure 0 in caso di errore impostando errno.
- */
-double calculate_operation(operand_t left, char operator, operand_t right) { // TODO: Spostare altrove
-    errno = 0;
-    switch (operator) {
-        case '+':
-            return left + right;
-        case '-':
-            return left - right;
-        case '*':
-            return left * right;
-        case '/':
-            return left / right;
-        default:
-            errno = EINVAL;
-            return 0;
-    }
-}
 
 /**
  * Elabora la connessione / richiesta ricevuta dal client.
@@ -57,8 +31,7 @@ void elaborate_request(const struct sock_info *client_info) {
         line[chars_read - 1] = '\0';
 
         // Inizia a calcolare il tempo
-        struct timespec start, end;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+        uint64_t start_microseconds = get_current_microseconds();
 
         // Effettua il parsing della linea e calcola l'operazione
         char operator;
@@ -78,13 +51,15 @@ void elaborate_request(const struct sock_info *client_info) {
         }
 
         // Termina il conteggio del tempo
-        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+        uint64_t end_microseconds = get_current_microseconds();
 
         // Invia la risposta al client
-        // TODO: risposta         long microseconds_elapsed = (end.tv_nsec - start.tv_nsec) / 1000;
+        // [timestamp ricezione richiesta, timestamp invio risposta, risultato operazione]
+        fprintf(client_info->socket_file, "%lu %lu %lf\n",
+                start_microseconds, end_microseconds, result);
 
         // Tieni traccia nel log
-        log_result(client_info, line, result, &start, &end);
+        log_result(client_info, line, result, start_microseconds, end_microseconds);
     } while (chars_read > 0 && errno == 0);
 
     if (errno != 0) {

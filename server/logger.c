@@ -34,6 +34,7 @@ void log_errno(const struct sock_info *client_info, const char *error_msg) {
     const char *errno_msg = strerror(errno);
     char full_msg[strlen(error_msg) + 3 + strlen(errno_msg)];
     strcpy(full_msg, error_msg);
+    strcat(full_msg, ": ");
     strcat(full_msg, errno_msg);
     log_message(client_info, L"%s\n", full_msg);
 }
@@ -88,18 +89,15 @@ void log_message(const struct sock_info *client_info, const wchar_t *restrict fo
 void log_result(const struct sock_info *client_info,
                 const char *operation_line,
                 operand_t result,
-                const struct timespec *start,
-                const struct timespec *end) {
-    // FIXME: Deve essere una vera data? Ora è il numero di microsecondi
+                uint64_t start_microseconds,
+                uint64_t end_microseconds) {
     log_message(client_info,
-                L"%s = %lf, da %u.%u a %u.%u -> %u microsecondi\n",
+                L"%s = %lf, da %lu a %lu -> %lu microsecondi\n",
                 operation_line,
                 result,
-                start->tv_sec,
-                start->tv_nsec / 1000,
-                end->tv_sec,
-                end->tv_nsec / 1000,
-                (end->tv_nsec - start->tv_nsec) / 1000);
+                start_microseconds,
+                end_microseconds,
+                end_microseconds - start_microseconds);
 }
 
 /**

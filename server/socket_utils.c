@@ -48,19 +48,19 @@ int bind_server(const char *ip, uint16_t port) {
     // Crea la socket (unnamed)
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd == -1) {
-        log_message(NULL, L"Errore nella creazione della socket");
+        log_errno(NULL, "Errore nella creazione della socket");
         return -1;
     }
 
     // Esegui il bind
     if (bind(socket_fd, (const struct sockaddr*) &server_address, sizeof(server_address)) == -1) {
-        log_message(NULL, L"Errore nel bind del socket");
+        log_errno(NULL, "Errore nel bind del socket");
         return -1;
     }
 
     // Metti in ascolto
     if (listen(socket_fd, BACKLOG_SIZE) == -1) {
-        log_message(NULL, L"Errore nella listen del socket");
+        log_errno(NULL, "Errore nella listen del socket");
         return -1;
     }
 

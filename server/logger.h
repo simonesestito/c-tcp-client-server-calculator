@@ -2,6 +2,7 @@
 #define SERVER_LOGGER_H
 
 #include "request_worker.h"
+#include "calc_utils.h"
 #include <wchar.h>
 
 /**
@@ -46,14 +47,14 @@ void log_errno(const struct sock_info *client_info, const char *error_msg);
  * @param client_info Informazioni sul client che ha provocato l'errore
  * @param operation_line Linea di input dell'operazione effettuata
  * @param result Risultato dell'operazione
- * @param start Tempo di inizio del calcolo
- * @param end Tempo di fine del calcolo
+ * @param start_microseconds Tempo in microsecondi di inizio del calcolo
+ * @param end_microseconds Tempo in microsecondi di fine del calcolo
  */
 void log_result(const struct sock_info *client_info,
                 const char *operation_line,
                 operand_t result,
-                const struct timespec *start,
-                const struct timespec *end);
+                uint64_t start_microseconds,
+                uint64_t end_microseconds);
 
 /**
  * Esegui il log di inizio di una nuova sessione del server.

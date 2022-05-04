@@ -5,11 +5,6 @@
 #include <stdio.h>
 
 /**
- * Tipo degli operandi
- */
-typedef double operand_t;
-
-/**
  * Raccogli le informazioni del client
  */
 struct sock_info {
