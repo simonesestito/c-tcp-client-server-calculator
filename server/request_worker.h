@@ -1,25 +1,7 @@
 #ifndef SERVER_REQUEST_WORKER_H
 #define SERVER_REQUEST_WORKER_H
 
-#include <netinet/in.h>
-#include <stdio.h>
-
-/**
- * Raccogli le informazioni del client
- */
-struct sock_info {
-    /**
-     * File pointer del socket col client.
-     * Utile per usare funzioni di libreria come getline
-     * che richiedono un FILE* e non un int file descriptor.
-     */
-    FILE *socket_file;
-
-    /**
-     * Informazioni aggiuntive sul socket
-     */
-    struct sockaddr_in client_info;
-};
+#include "socket_utils.h"
 
 /**
  * Elabora la connessione / richiesta ricevuta dal client.

@@ -9,11 +9,7 @@
 #include "socket_utils.h"
 #include "request_worker.h"
 #include "logger.h"
-
-/**
- * Indica se il server è in funzione o deve terminare
- */
-int working = 1;
+#include "live_status_table.h"
 
 /**
  * File descriptor della server socket
@@ -90,6 +86,9 @@ int main(int argc, const char **argv) {
                 L"Processo server (pid=%d) avviato sull'indirizzo IP %s, porta %d\n",
                 getpid(), ip, port);
 
+    // Mostra lo stato in live su stdout
+    init_status_table();
+
     while (working) {
         // Accetta la prossima richiesta
         struct sockaddr_in client;
@@ -98,12 +97,14 @@ int main(int argc, const char **argv) {
         handle_request(client_socket, &client);
     }
 
+    stop_status_table();
+
     return EXIT_SUCCESS;
 }
 
 void handle_request(int client_socket, const struct sockaddr_in *client) {
     if (!working) {
-        log_message(NULL, L"Chiusura in corso...\n");
+        return; // Non fare nulla, il server è in fase di spegnimento
     } else if (client_socket == -1) {
         // Errore nell'accettazione della richiesta
         log_errno(NULL, "Accettazione nuova richiesta TCP");

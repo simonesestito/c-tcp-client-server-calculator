@@ -1,11 +1,29 @@
 #ifndef SERVER_SOCKET_UTILS_H
 #define SERVER_SOCKET_UTILS_H
 
-#include <bits/stdint-uintn.h>
+#include <netinet/in.h>
+#include <stdio.h>
 
 #define DEFAULT_PORT 12345
 #define DEFAULT_HOST "127.0.0.1"
 #define BACKLOG_SIZE 128
+
+/**
+ * Raccogli le informazioni del client
+ */
+struct sock_info {
+    /**
+     * File pointer del socket col client.
+     * Utile per usare funzioni di libreria come getline
+     * che richiedono un FILE* e non un int file descriptor.
+     */
+    FILE *socket_file;
+
+    /**
+     * Informazioni aggiuntive sul socket
+     */
+    struct sockaddr_in client_info;
+};
 
 /**
  * Converti una stringa in un numero intero senza segno a 16 bit

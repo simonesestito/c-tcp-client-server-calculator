@@ -1,11 +1,12 @@
 #include "request_worker.h"
 #include "logger.h"
 #include "calc_utils.h"
+#include "live_status_table.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <time.h>
+#include <pthread.h>
 
 /**
  * Elabora la connessione / richiesta ricevuta dal client.
@@ -22,9 +23,14 @@ void elaborate_request(const struct sock_info *client_info) {
     size_t line_size = 0;
     ssize_t chars_read;
 
+    // Mostra il nuovo client nella tabella di stato
+    register_client(client_info, pthread_self());
+
     do {
         // Ottieni la riga dell'operazione
+        // FIXME: rimane in attesa anche dopo fclose()
         chars_read = getline(&line, &line_size, client_info->socket_file);
+        fprintf(stderr, "getline unlocked\n");
         if (chars_read < 0) break;
 
         // Rimuovi il \n finale
@@ -40,15 +46,18 @@ void elaborate_request(const struct sock_info *client_info) {
             // Errore nella lettura
             log_message(client_info, L"%s\n", "Errore nel parsing dell'operazione");
             errno = 0;
-            continue; // TODO: Che fare? Chiudere connessione?
+            continue; // TODO: Che fare? Chiudere connessione? break
         }
 
         operand_t result = calculate_operation(left_operand, operator, right_operand);
         if (errno == EINVAL) {
             log_errno(client_info, "Operazione sconosciuta");
             errno = 0;
-            continue;  // TODO: Che fare? Chiudere connessione?
+            continue;  // TODO: Che fare? Chiudere connessione? break
         }
+
+        // Conteggia una nuova operazione nel live status
+        add_client_operation(client_info);
 
         // Termina il conteggio del tempo
         uint64_t end_microseconds = get_current_microseconds();
@@ -66,6 +75,7 @@ void elaborate_request(const struct sock_info *client_info) {
         log_errno(client_info, "Impossibile leggere la linea");
     }
 
+    remove_client(client_info);
     free(line);
     fclose(client_info->socket_file);
     free((struct sock_info *) client_info);
