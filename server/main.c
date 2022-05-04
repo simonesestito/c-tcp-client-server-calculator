@@ -66,6 +66,10 @@ int main(int argc, const char **argv) {
     signal(SIGTERM, handle_exit);
     signal(SIGQUIT, handle_exit);
 
+    // Mostra il messaggio di avvio nel log
+    if (log_new_start() == -1)
+        return EXIT_FAILURE;
+
     // Ottieni la porta scelta dall'utente
     uint16_t port = argc < 2 ? DEFAULT_PORT : str_to_uint16(argv[1]);
     if (port == 0)
@@ -99,7 +103,7 @@ int main(int argc, const char **argv) {
 
 void handle_request(int client_socket, const struct sockaddr_in *client) {
     if (!working) {
-        log_message(NULL, L"\n\nChiusura in corso...\n");
+        log_message(NULL, L"Chiusura in corso...\n");
     } else if (client_socket == -1) {
         // Errore nell'accettazione della richiesta
         log_errno(NULL, "Accettazione nuova richiesta TCP");

@@ -52,7 +52,6 @@ void log_message(const struct sock_info *client_info, const wchar_t *restrict fo
 
     // Leggi i variadic parameters dai ..., da passare a printf
     va_list args;
-    va_start(args, format);
 
     // Stampa sia su stdout che su file
     // Siccome possono accadere più scritture concorrenti
@@ -62,19 +61,19 @@ void log_message(const struct sock_info *client_info, const wchar_t *restrict fo
     // devono volontariamente rispettare questo lock.
     flockfile(stdout);
     wprintf(L"%s ", prefix);
+    va_start(args, format);
     vwprintf(format, args);
+    va_end(args);
     funlockfile(stdout);
 
-    if (client_info != NULL) {
-        // TODO: Su file
-        // TODO: Lock file flockfile
-        //  fwprintf(L"%s ", prefix);
-        //  vfwprintf(format, args);
-        // TODO: Unlock file funlockfile
-    }
-
-    // Dealloca gli argomenti
+    // Qui ci interessa ottenere il lock sul file solo tra i thread
+    flockfile(open_log_file());
+    fwprintf(open_log_file(), L"%s ", prefix);
+    va_start(args, format);
+    vfwprintf(open_log_file(), format, args);
     va_end(args);
+    fflush(open_log_file());
+    funlockfile(open_log_file());
 }
 
 /**
@@ -101,4 +100,55 @@ void log_result(const struct sock_info *client_info,
                 end->tv_sec,
                 end->tv_nsec / 1000,
                 (end->tv_nsec - start->tv_nsec) / 1000);
+}
+
+/**
+ * Esegui il log di inizio di una nuova sessione del server.
+ *
+ * Utile dato che il log è in append, per capire di che avvio si sta parlando.
+ * @return -1 in caso di errore, 0 se con successo.
+ */
+int log_new_start() {
+    FILE *log_file = open_log_file();
+    if (log_file == NULL) {
+        perror("Errore nell'apertura del file di log.");
+        return -1;
+    }
+
+    time_t current_time = time(NULL);
+    struct tm current_date = *localtime(&current_time);
+
+    flockfile(open_log_file());
+    fwprintf(open_log_file(), L"\n===================================\n");
+    fwprintf(open_log_file(), L"====== Nuovo avvio del server =====\n");
+    fwprintf(open_log_file(), L"======= %02d/%02d/%d %02d:%02d:%02d =======\n",
+             current_date.tm_mday,
+             current_date.tm_mon + 1,
+             current_date.tm_year + 1900,
+             current_date.tm_hour,
+             current_date.tm_min,
+             current_date.tm_sec);
+    fwprintf(open_log_file(), L"===================================\n");
+    fflush(open_log_file());
+    funlockfile(open_log_file());
+    return 0;
+}
+
+/**
+ * Apri il file di log, se non è ancora stato aperto.
+ * Usa la modalità di append.
+ *
+ * @return File pointer al log
+ */
+FILE *open_log_file() {
+    static FILE *log_file = NULL;
+
+    if (log_file == NULL) {
+        log_file = fopen(DEFAULT_LOG_FILENAME, "a");
+        // FIXME: il file di log deve essere lo stesso tra più esecuzioni del programma o può variare?
+        // FIXME: ci possono essere istanze multiple del server?
+        // FIXME: cerca il prossimo file libero e non bloccato (1), (2), (3), etc??
+    }
+
+    return log_file;
 }

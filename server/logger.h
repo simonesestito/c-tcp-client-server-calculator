@@ -10,6 +10,11 @@
 #define LOG_PREFIX_SIZE 24
 
 /**
+ * Nome del file di log
+ */
+#define DEFAULT_LOG_FILENAME "server.log"
+
+/**
  * Ottieni il prefisso del messaggio di log,
  * riportante informazioni sulla connessione.
  *
@@ -49,5 +54,21 @@ void log_result(const struct sock_info *client_info,
                 operand_t result,
                 const struct timespec *start,
                 const struct timespec *end);
+
+/**
+ * Esegui il log di inizio di una nuova sessione del server.
+ *
+ * Utile dato che il log è in append, per capire di che avvio si sta parlando.
+ * @return -1 in caso di errore, 0 se con successo.
+ */
+int log_new_start();
+
+/**
+ * Apri il file di log, se non è ancora stato aperto.
+ * Usa la modalità di append.
+ *
+ * @return File pointer al log
+ */
+FILE* open_log_file();
 
 #endif //SERVER_LOGGER_H

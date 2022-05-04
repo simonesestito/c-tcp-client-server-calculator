@@ -4,7 +4,6 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <strings.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 /**
