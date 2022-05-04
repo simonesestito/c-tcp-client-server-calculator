@@ -53,7 +53,7 @@ pthread_t table_thread;
  * Si aggiorna ogni intervallo di millisecondi.
  */
 void show_table(void) {
-    while (working) {
+    while (working == 1) {
         pthread_mutex_lock(&mutex);
         flockfile(stdout);
 
@@ -130,7 +130,30 @@ void show_table(void) {
         usleep(TABLE_MICROSECONDS_REFRESH);
     }
 
-    // TODO: after !working, mostra che sta in chiusura
+    // Mostra l'animazione durante la chiusura
+    int visual_step = 0;
+    while (working == 0) {
+        char loading_char;
+        switch (visual_step) {
+            case 0:
+                loading_char = '/';
+                break;
+            case 1:
+                loading_char = '-';
+                break;
+            case 2:
+                loading_char = '\\';
+                break;
+            case 3:
+                loading_char = '|';
+                break;
+        }
+        wprintf(L" %s %c    \r", "Chiusura in corso...", loading_char);
+        fflush(stdout);
+        visual_step = (visual_step + 1) % 4;
+        usleep(TABLE_MICROSECONDS_REFRESH / 7);
+    }
+    wprintf(L"\n");
 }
 
 void init_status_table() {
@@ -204,18 +227,18 @@ void stop_status_table() {
         struct live_status_item* item = connection_items[i];
         if (item == NULL)
             continue;
-        pthread_t thread = item->thread_id;
 
-        if (fclose(item->client->socket_file) == -1)
-            perror("Chiusura del file");
-
-        if (pthread_join(thread, NULL) == -1)
+        if (pthread_join(item->thread_id, NULL) == -1)
             perror("Join thread in chiusura");
 
         // La free degli elementi del vettore viene fatto dal thread,
         // che quando finisci invoca la remove_client()
     }
     free(connection_items);
+
+    // Interrompi anche l'animazione di chiusura
+    working = -1;
+    pthread_join(table_thread, NULL);
 
     pthread_mutex_destroy(&mutex);
 }

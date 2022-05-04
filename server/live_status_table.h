@@ -6,7 +6,7 @@
 /**
  * Microsecondi dopo cui si deve aggiornare la tabella
  */
-#define TABLE_MICROSECONDS_REFRESH (200 * 1000)
+#define TABLE_MICROSECONDS_REFRESH (500 * 1000)
 
 /**
  * Variabile globale per gestire finchè il server è in esecuzione

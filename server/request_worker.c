@@ -27,10 +27,12 @@ void elaborate_request(const struct sock_info *client_info) {
     register_client(client_info, pthread_self());
 
     do {
-        // Ottieni la riga dell'operazione
-        // FIXME: rimane in attesa anche dopo fclose()
+        // Ottieni la riga dell'operazione,
+        // aspettando dati e vedendo se serve interrompere
+        wait_until(fileno(client_info->socket_file), &working);
+        if (!working) break;
+
         chars_read = getline(&line, &line_size, client_info->socket_file);
-        fprintf(stderr, "getline unlocked\n");
         if (chars_read < 0) break;
 
         // Rimuovi il \n finale
@@ -77,6 +79,20 @@ void elaborate_request(const struct sock_info *client_info) {
 
     remove_client(client_info);
     free(line);
+
+
+
+    fflush(client_info->socket_file);
+    perror("fflush");
+
+    shutdown(fileno(client_info->socket_file), SHUT_RD);
+    perror("shutdown R");
+
+    shutdown(fileno(client_info->socket_file), SHUT_WR);
+    perror("shutdown W");
+
     fclose(client_info->socket_file);
+    perror("close");
+
     free((struct sock_info *) client_info);
 }

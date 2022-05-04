@@ -9,6 +9,11 @@
 #define BACKLOG_SIZE 128
 
 /**
+ * Tempo di attesa per poll() e quindi wait_until()
+ */
+#define POLL_WAIT_TIMEOUT 2000
+
+/**
  * Raccogli le informazioni del client
  */
 struct sock_info {
@@ -39,5 +44,22 @@ uint16_t str_to_uint16(const char *str);
  * @return -1 in caso di errore, il file descriptor del server socket altrimenti
  */
 int bind_server(const char *ip, uint16_t port);
+
+/**
+ * Resta in attesa di dati sul file descriptor.
+ *
+ * Utilizza poll()
+ * (e non select(), per via delle limitazioni scritte nel man)
+ * per:
+ * - avere subito dati, se arrivano
+ * - ogni intervallo di tempo, controllare se il running_flag
+ *   indica ancora uno stato di esecuzione;
+ *   in caso contrario, termina l'attesa.
+ *
+ * @param fd File descriptor da osservare
+ * @param running_flag Flag che indica se continuare 
+ *          ad ascoltare (= 1), o terminare (= 0).
+ */
+void wait_until(int fd, const int *running_flag);
 
 #endif //SERVER_SOCKET_UTILS_H

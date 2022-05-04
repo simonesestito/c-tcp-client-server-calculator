@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <strings.h>
 #include <stdlib.h>
+#include <poll.h>
 
 /**
  * Converti una stringa in un numero intero senza segno a 16 bit
@@ -15,7 +16,7 @@ uint16_t str_to_uint16(const char *str) {
     long number = strtol(str, &string_part, 10);
 
     uint16_t parsed_number;
-    if (errno != 0 || string_part[0] != '\0' || number <= 0 || number > 65535)
+    if (string_part[0] != '\0' || number <= 0 || number > 65535)
         parsed_number = 0;
     else
         parsed_number = (uint16_t) number;
@@ -65,4 +66,27 @@ int bind_server(const char *ip, uint16_t port) {
     }
 
     return socket_fd;
+}
+
+/**                                                   * Resta in attesa di dati sul file descriptor.
+ *                                                    * Utilizza poll()                                    * (e non select(), per via delle limitazioni scritte
+ nel man)
+ * per:
+ * - avere subito dati, se arrivano                   * - ogni intervallo di tempo, controllare se il running_flag                                              *   indica ancora uno stato di esecuzione;           *   in caso contrario, termina l'attesa.             *                                                    * @param fd File descriptor da osservare             * @param running_flag Flag che indica se continuare
+ *          ad ascoltare (= 1), o terminare (= 0).    */                                                  void wait_until(int fd, const int *running_flag) {
+     struct pollfd poll_info;
+     poll_info.fd = fd;
+     poll_info.events = POLLIN;
+     poll_info.revents = 0;
+
+     int poll_res;
+     
+     while ((poll_res = poll(&poll_info, 1, POLL_WAIT_TIMEOUT)) == 0 && *running_flag) {
+         // Aspetta ancora
+     }
+
+     if (poll_res < 0) {
+         // Errore
+         perror("Errore poll in wait_until");
+     }
 }
