@@ -170,3 +170,15 @@ int log_new_start(const char *filename) {
 FILE *open_log_file() {
     return _open_log_file(NULL);
 }
+
+/**
+ * Termina tutte le operazioni di log, chiudi il file e libera la memoria
+ */
+void close_logging() {
+    // Rimuovi tutti i log in memoria
+    for (int i = 0; i < LOGS_ARRAY_SIZE; i++)
+        free(logs_array[i]);
+
+    // Chiudi il file di log
+    fclose(open_log_file());
+}

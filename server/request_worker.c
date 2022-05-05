@@ -83,4 +83,5 @@ void elaborate_request(const struct sock_info *client_info) {
     fflush(client_info->socket_file);
     fclose(client_info->socket_file);
     free((struct sock_info *) client_info);
+    pthread_detach(pthread_self());
 }

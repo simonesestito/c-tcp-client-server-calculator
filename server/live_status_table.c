@@ -250,7 +250,7 @@ void stop_status_table() {
         if (item == NULL)
             continue;
 
-        if (pthread_join(item->thread_id, NULL) == -1)
+        if (pthread_join(item->thread_id, NULL) != 0)
             perror("Join thread in chiusura");
 
         // La free degli elementi del vettore viene fatto dal thread,
@@ -263,9 +263,4 @@ void stop_status_table() {
     pthread_join(table_thread, NULL);
 
     pthread_mutex_destroy(&mutex);
-
-    // Rimuovi tutti i log in memoria
-    for (int i = 0; i < LOGS_ARRAY_SIZE; i++)
-        free(logs_array[i]);
-    fclose(open_log_file());
 }

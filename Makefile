@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall -O2 -pthread
+CFLAGS := -Wall -O2 -pthread -g
 
 COMMON_DIR := common
 COMMON_SRC := $(wildcard $(COMMON_DIR)/*.c)

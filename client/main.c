@@ -4,6 +4,7 @@
 #include "../common/calc_utils.h"
 #include "../common/socket_utils.h"
 #include "../common/main_init.h"
+#include "../common/logger.h"
 #include "chart.h"
 
 /**
@@ -56,7 +57,7 @@ int main(int argc, const char **argv) {
             // Aggiorna il grafico
             update_chart(end_timestamp - start_timestamp);
 
-            wprintf(L"[%lu us] %lf %c %lf = %lu\n\n",
+            wprintf(L"[%lu us] %lf %c %lf = %lf\n\n",
                     end_timestamp - start_timestamp,
                     left_operand,
                     operator,
@@ -68,6 +69,9 @@ int main(int argc, const char **argv) {
     fclose(socket_input);
     fclose(socket_output);
     free(chart_data);
+
+    close_logging();
+    return EXIT_SUCCESS;
 }
 
 /**

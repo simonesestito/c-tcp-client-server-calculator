@@ -36,6 +36,7 @@ int main(int argc, const char **argv) {
     }
 
     stop_status_table();
+    close_logging();
 
     return EXIT_SUCCESS;
 }

@@ -90,4 +90,9 @@ int log_new_start(const char *filename);
  */
 FILE* open_log_file();
 
+/**
+ * Termina tutte le operazioni di log, chiudi il file e libera la memoria
+ */
+void close_logging();
+
 #endif //SERVER_LOGGER_H
