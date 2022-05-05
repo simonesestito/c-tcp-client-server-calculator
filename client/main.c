@@ -46,7 +46,7 @@ int main(int argc, const char **argv) {
         return EXIT_FAILURE;
 
     // Gestisci i casi di SIGPIPE, che altrimenti di default terminano il programma
-    signal(SIGPIPE, handle_sigpipe);
+    handle_signal(SIGPIPE, handle_sigpipe);
 
     // Finché posso ancora interagire con l'utente...
     while (socket_fd != SOCKET_DEAD && !feof(stdin)) {

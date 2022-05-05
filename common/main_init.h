@@ -47,4 +47,14 @@ int show_usage(const char *exec);
  */
 int read_argv_socket_params(uint16_t *port, const char **ip, int argc, const char **argv);
 
+/**
+ * Imposta l'handler del segnale, usando sigaction()
+ * ma usando una chiamata compatta stile signal(),
+ * che però è deprecata.
+ *
+ * @param signal Segnale da gestire
+ * @param handler Funzione che lo gestisce
+ */
+void handle_signal(int signal, void (*handler));
+
 #endif //HW2_MAIN_INIT_H

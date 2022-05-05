@@ -39,9 +39,9 @@ int main_init(int argc, const char **argv, const char *log_filename, socket_init
     setlocale(LC_CTYPE, "");
 
     // Gestisci i segnali di chiusura
-    signal(SIGINT, _handle_exit);
-    signal(SIGTERM, _handle_exit);
-    signal(SIGQUIT, _handle_exit);
+    handle_signal(SIGINT, _handle_exit);
+    handle_signal(SIGTERM, _handle_exit);
+    handle_signal(SIGQUIT, _handle_exit);
 
     // Mostra il messaggio di avvio nel log
     if (log_new_start(log_filename) == -1)
@@ -115,4 +115,22 @@ int show_usage(const char *exec) {
     fprintf(stderr, "Utilizzo: %s [PORTA] [IP]\n", exec);
     fprintf(stderr, "Di default, PORTA = %d, IP = %s\n", DEFAULT_PORT, DEFAULT_HOST);
     return EXIT_FAILURE;
+}
+
+/**
+ * Imposta l'handler del segnale, usando sigaction()
+ * ma usando una chiamata compatta stile signal(),
+ * che però è deprecata.
+ *
+ * @param signal Segnale da gestire
+ * @param handler Funzione che lo gestisce
+ */
+void handle_signal(int signal, void (*handler)) {
+    struct sigaction new_action;
+    new_action.sa_handler = handler;
+    new_action.sa_flags = 0;
+    sigemptyset(&new_action.sa_mask);
+
+    // Invoca la sigaction() che stiamo astraendo in questo wrapper
+    sigaction(signal, &new_action, NULL);
 }
