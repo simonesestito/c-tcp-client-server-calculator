@@ -135,7 +135,7 @@ void show_table(void) {
     int visual_step = 0;
     while (socket_fd == 0) {
         char loading_char;
-        switch (visual_step) {
+        switch (visual_step % 4) {
             case 0:
                 loading_char = '/';
                 break;

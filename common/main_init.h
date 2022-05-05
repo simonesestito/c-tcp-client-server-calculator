@@ -9,6 +9,18 @@
 extern int socket_fd;
 
 /**
+ * Indica se il programma deve ancora essere in funzione.
+ *
+ * Usata principalmente solo nel CLIENT, dove non è ovviamente detto
+ * che se la socket è chiusa / non valida, allora il programma vuole terminare,
+ * ad esempio in riconnessione.
+ *
+ * Invece, per il server, se la server socket viene meno, il server
+ * è sicuramente in terminazione / errore irrecuperabile.
+ */
+extern int working;
+
+/**
  * Funzione che prende un IP e una porta, restituendo un file descriptor di una socket.
  */
 typedef int (*socket_initializer_t)(const char *, uint16_t);

@@ -14,7 +14,8 @@
 void handle_sigpipe() {
     // Resetta il socket File descriptor cosi da far capire
     // a tutti che la connessione non è più valida.
-    socket_fd = SOCKET_WILL_RETRY;
+    // Rimane ancora in esecuzione per riprovare la connessione.
+    socket_fd = 0;
 }
 
 /**
@@ -49,10 +50,12 @@ int main(int argc, const char **argv) {
     handle_signal(SIGPIPE, handle_sigpipe);
 
     // Finché posso ancora interagire con l'utente...
-    while (socket_fd != SOCKET_DEAD && !feof(stdin)) {
+    while (working && !feof(stdin)) {
         // Riconnettiti al server
-        if (socket_fd <= SOCKET_WILL_RETRY && (socket_fd = reconnect_exponential(ip, port)) == -1)
-            break;
+        if (socket_fd <= 0 && (socket_fd = reconnect_exponential(ip, port)) == -1) {
+            working = 0; // Indica la fase di terminazione del programma
+            continue;
+        }
 
         // Ripulisci lo schermo e inizializza l'area per il grafo
         plot_chart(chart_data, chart_data_len);
@@ -78,9 +81,9 @@ int main(int argc, const char **argv) {
     }
 
     close_logging();
-    // Se la socket è chiusa, senza poter riprovare, e l'utente NON ha dato CTRL+D,
+    // Se la socket è chiusa, dopo i vari tentativi, e l'utente NON ha dato CTRL+D,
     // considerala come un'esecuzione fallimentare.
-    return socket_fd == SOCKET_DEAD && !feof(stdout) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return socket_fd <= 0 && working && !feof(stdout) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 /**
@@ -149,11 +152,12 @@ void do_server_operations(FILE* socket_input, FILE* socket_output) {
     char operator;
     unsigned long start_timestamp, end_timestamp;
 
-    while (socket_fd > SOCKET_WILL_RETRY) {
+    while (socket_fd > 0 && working) {
         // Leggi l'input utente
         if (get_user_input(&left_operand, &right_operand, &operator) == -1) {
             // Non sarà più possibile avere input utente. Termina.
-            socket_fd = SOCKET_DEAD;
+            socket_fd = 0;
+            working = 0;
             continue;
         }
 
@@ -178,7 +182,7 @@ void do_server_operations(FILE* socket_input, FILE* socket_output) {
             // C'è stato un EOF, la connessione è stata chiusa.
             log_message(NULL, "La connessione col server è stata chiusa.\n");
             // Esegui ri-connessione
-            socket_fd = SOCKET_WILL_RETRY;
+            socket_fd = 0;
         } else {
             // La connessione non è chiusa ma c'è stato un errore nell'input
             log_errno(NULL, "Errore nella ricezione dei dati.\n");

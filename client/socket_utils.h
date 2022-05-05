@@ -4,20 +4,6 @@
 #include "../common/socket_utils.h"
 
 /**
- * Valore per il file descriptor della socket che, a livello del programma,
- * significa che la socket è definitivamente chiusa,
- * ma è contro la volontà dell'utente, che vorrebbe usare il programma.
- */
-#define SOCKET_WILL_RETRY 0
-
-/**
- * Valore per il file descriptor della socket che, a livello del programma,
- * significa che la socket è definitivamente chiusa,
- * e anche l'utente ha smesso di usare il programma.
- */
-#define SOCKET_DEAD -1
-
-/**
  * Connettiti al server.
  *
  * Implementata solo nel programma CLIENT.

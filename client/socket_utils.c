@@ -1,5 +1,6 @@
 #include "socket_utils.h"
 #include "../common/logger.h"
+#include "../common/main_init.h"
 #include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -26,19 +27,19 @@ int connect_to_server(const char *ip, uint16_t port) {
     }
 
     // Crea la socket (unnamed)
-    int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_fd == -1) {
+    int new_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (new_socket_fd == -1) {
         log_errno(NULL, "Errore nella creazione della socket");
         return -1;
     }
 
     // Connetti al server
-    if (connect(socket_fd, (struct sockaddr*) &server_address, sizeof(server_address)) == -1) {
+    if (connect(new_socket_fd, (struct sockaddr *) &server_address, sizeof(server_address)) == -1) {
         log_errno(NULL, "Errore nella connect del socket");
         return -1;
     }
 
-    return socket_fd;
+    return new_socket_fd;
 }
 
 /**
@@ -52,25 +53,44 @@ int connect_to_server(const char *ip, uint16_t port) {
  */
 int reconnect_exponential(const char *ip, uint16_t port) {
     unsigned int delay_seconds = 1;
-    int socket_fd = 0;
+    int reconnect_fd = -1;
 
-    // Riprova a connetterti
-    while (socket_fd <= SOCKET_WILL_RETRY && delay_seconds < 10) {
-        wprintf(L"Tentativo di riconnessione dopo %u secondi\n", delay_seconds);
-        // TODO: Fare animazione di attesa [===>   ]
-        sleep(delay_seconds);
+    // Riprova a connetterti, se l'utente vuole ancora provarci (controlla "working")
+    while (reconnect_fd <= 0 && working && delay_seconds < 10) {
+        // Mostra animazione di attesa, se l'utente vuole ancora usarlo (controlla "working")
+        for (unsigned int i = 0; i < delay_seconds * 8 && working; i++) {
+            char loading_char;
+            switch (i % 4) {
+                case 0:
+                    loading_char = '/';
+                    break;
+                case 1:
+                    loading_char = '-';
+                    break;
+                case 2:
+                    loading_char = '\\';
+                    break;
+                case 3:
+                    loading_char = '|';
+                    break;
+            }
+            wprintf(L" Tentativo di riconnessione tra %u secondi %-5c\r", delay_seconds - i / 8, loading_char);
+            fflush(stdout);
+            usleep(125000 /* 1/8 secondi */);
+        }
+        wprintf(L"Tentativo di riconnessione... %-15c\n", ' ');
 
         // Connessione...
-        socket_fd = connect_to_server(ip, port);
+        reconnect_fd = connect_to_server(ip, port);
 
         delay_seconds *= 2;
     }
 
-    if (socket_fd <= SOCKET_WILL_RETRY) {
+    if (reconnect_fd <= 0) {
         // Non si riesce a connettersi nemmeno dopo svariate prove.
         // Ci si rinuncia.
         log_message(NULL, "Impossibile riconnettersi al server.\n");
     }
 
-    return socket_fd;
+    return reconnect_fd;
 }

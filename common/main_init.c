@@ -11,6 +11,18 @@
 int socket_fd = 0;
 
 /**
+ * Indica se il programma deve ancora essere in funzione.
+ *
+ * Usata principalmente solo nel CLIENT, dove non è ovviamente detto
+ * che se la socket è chiusa / non valida, allora il programma vuole terminare,
+ * ad esempio in riconnessione.
+ *
+ * Invece, per il server, se la server socket viene meno, il server
+ * è sicuramente in terminazione / errore irrecuperabile.
+ */
+int working = 1;
+
+/**
  * Gestisci i segnali di uscita (SIGTERM, SIGINT, SIGQUIT).
  */
 void _handle_exit() {
@@ -18,6 +30,7 @@ void _handle_exit() {
         close(socket_fd);
         socket_fd = 0;
     }
+    working = 0;
 }
 
 /**
