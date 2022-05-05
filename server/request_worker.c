@@ -35,8 +35,8 @@ void elaborate_request(const struct sock_info *client_info) {
         chars_read = getline(&line, &line_size, client_info->socket_file);
         if (chars_read < 0) break;
 
-        // Rimuovi il \n finale
-        line[chars_read - 1] = '\0';
+        // Rimuovi il \n o \r\n finale
+        strip_newline(line, &chars_read);
 
         // Inizia a calcolare il tempo
         uint64_t start_microseconds = get_current_microseconds();
@@ -46,7 +46,7 @@ void elaborate_request(const struct sock_info *client_info) {
         operand_t left_operand, right_operand;
         if (sscanf(line, "%c %lf %lf", &operator, &left_operand, &right_operand) < 3) {
             // Errore nella lettura
-            log_message(client_info, L"%s\n", "Errore nel parsing dell'operazione");
+            log_message(client_info, "Errore nel parsing dell'operazione\n");
             errno = 0;
             continue; // TODO: Che fare? Chiudere connessione? break
         }
@@ -68,6 +68,7 @@ void elaborate_request(const struct sock_info *client_info) {
         // [timestamp ricezione richiesta, timestamp invio risposta, risultato operazione]
         fprintf(client_info->socket_file, "%lu %lu %lf\n",
                 start_microseconds, end_microseconds, result);
+        fflush(client_info->socket_file);
 
         // Tieni traccia nel log
         log_result(client_info, line, result, start_microseconds, end_microseconds);

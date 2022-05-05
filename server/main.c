@@ -83,7 +83,7 @@ int main(int argc, const char **argv) {
         return show_usage(argv[0], NULL);
 
     log_message(NULL,
-                L"Processo server (pid=%d) avviato sull'indirizzo IP %s, porta %d\n",
+                "Processo server (pid=%d) avviato sull'indirizzo IP %s, porta %d\n",
                 getpid(), ip, port);
 
     // Mostra lo stato in live su stdout

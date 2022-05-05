@@ -62,4 +62,11 @@ int bind_server(const char *ip, uint16_t port);
  */
 void wait_until(int fd, const int *running_flag);
 
+/**
+ * Elimina il \n o \r\n finali di una stringa ottenuta da una socket da getline.
+ * @param line Linea da cui rimuovere i caratteri
+ * @param size Dimensione della linea, inclusi questi caratteri
+ */
+void strip_newline(char *line, ssize_t *size);
+
 #endif //SERVER_SOCKET_UTILS_H

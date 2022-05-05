@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall -O2 -pthread -g
+CFLAGS := -Wall -O2 -pthread
 BUILD_DIR=build
 SOURCES := $(wildcard *.c)
 OBJECTS := $(SOURCES:.c=.o)

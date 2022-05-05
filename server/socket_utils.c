@@ -42,7 +42,7 @@ int bind_server(const char *ip, uint16_t port) {
 
     // Prova a impostare l'indirizzo IP
     if (inet_pton(AF_INET, ip, &(server_address.sin_addr)) != 1) {
-        log_message(NULL, L"ERRORE: Indirizzo IP invalido\n");
+        log_message(NULL, "ERRORE: Indirizzo IP invalido\n");
         return -1;
     }
 
@@ -97,11 +97,24 @@ void wait_until(int fd, const int *running_flag) {
     int poll_res;
 
     while ((poll_res = poll(&poll_info, 1, POLL_WAIT_TIMEOUT)) == 0 && *running_flag) {
-        // Aspetta ancora
+        // Aspetta, ancora nessun dato e il server è in esecuzione
     }
 
     if (poll_res < 0) {
         // Errore
-        perror("Errore poll in wait_until");
+        log_errno(NULL, "Errore poll in wait_until");
+    }
+}
+
+/**
+ * Elimina il \n o \r\n finali di una stringa ottenuta da una socket da getline.
+ *
+ * @param line Linea da cui rimuovere i caratteri
+ * @param size Dimensione della linea, inclusi questi caratteri
+ */
+void strip_newline(char *line, ssize_t *size) {
+    while (*size > 1 && (line[*size - 1] == '\n' || line[*size - 1] == '\r')) {
+        line[*size - 1] = '\0';
+        (*size)--;
     }
 }

@@ -5,15 +5,36 @@
 #include "calc_utils.h"
 #include <wchar.h>
 
+
 /**
  * Dimensione richiesta del buffer per il prefisso del messaggio di log.
  */
-#define LOG_PREFIX_SIZE 24
+#define LOG_PREFIX_SIZE 25
+
+/**
+ * Dimensione massima di una linea del messaggio di log.
+ */
+#define LOG_LINE_MAX_SIZE 500
 
 /**
  * Nome del file di log
  */
 #define DEFAULT_LOG_FILENAME "server.log"
+
+/**
+ * Quanti sono gli ultimi log salvati nel vettore
+ */
+#define LOGS_ARRAY_SIZE 5
+
+/**
+ * Ultimi messaggi di log scritti nel file
+ */
+extern char* logs_array[LOGS_ARRAY_SIZE];
+
+/**
+ * Indice da cui iniziare a leggere nel vettore circolare dei log
+ */
+extern int logs_index;
 
 /**
  * Ottieni il prefisso del messaggio di log,
@@ -31,7 +52,7 @@ void get_prefix(const struct sock_info *client_info, char *buffer);
  * @param format Formato della stringa di log, nel formato printf
  * @param ... Argomenti della stringa di log
  */
-void log_message(const struct sock_info *client_info, const wchar_t *restrict format, ...);
+void log_message(const struct sock_info *client_info, const char *restrict format, ...);
 
 /**
  * Esegui il log di error number, inserendo anche le informazioni sul client.

@@ -1,5 +1,6 @@
 #include "live_status_table.h"
 #include "calc_utils.h"
+#include "logger.h"
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -55,7 +56,6 @@ pthread_t table_thread;
 void show_table(void) {
     while (working == 1) {
         pthread_mutex_lock(&mutex);
-        flockfile(stdout);
 
         // Pulisci schermo
         wprintf(L"\e[1;1H\e[2J");
@@ -122,10 +122,16 @@ void show_table(void) {
 
         fflush(stdout);
 
-
-        // TODO: Logger, ultime 5 righe
-
+        // Scrivi le ultime righe del log
+        flockfile(stdout);
+        for (int i = 0; i < 5; i++) {
+            // Leggi dal vettore circolare
+            int real_index = (logs_index + i) % LOGS_ARRAY_SIZE;
+            if (logs_array[real_index] != NULL)
+                wprintf(L"%s", logs_array[real_index]);
+        }
         funlockfile(stdout);
+
         pthread_mutex_unlock(&mutex);
         usleep(TABLE_MICROSECONDS_REFRESH);
     }
@@ -148,7 +154,7 @@ void show_table(void) {
                 loading_char = '|';
                 break;
         }
-        wprintf(L" %s %c    \r", "Chiusura in corso...", loading_char);
+        wprintf(L" %s %-50c\r", "Chiusura in corso...", loading_char);
         fflush(stdout);
         visual_step = (visual_step + 1) % 4;
         usleep(TABLE_MICROSECONDS_REFRESH / 7);
@@ -242,6 +248,8 @@ void add_client_operation(const struct sock_info *client) {
  * attendendo i rispettivi thread.
  */
 void stop_status_table() {
+    // Working è già stata impostata a zero nel main a questo punto.
+
     // Chiudi tutti i file descriptor
     // Join tutti i thread
     for (size_t i = 0; i < connection_items_size; i++) {
@@ -265,4 +273,9 @@ void stop_status_table() {
     pthread_join(table_thread, NULL);
 
     pthread_mutex_destroy(&mutex);
+
+    // Rimuovi tutti i log in memoria
+    for (int i = 0; i < LOGS_ARRAY_SIZE; i++)
+        free(logs_array[i]);
+    fclose(open_log_file());
 }
