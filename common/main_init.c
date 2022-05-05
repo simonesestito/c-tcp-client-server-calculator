@@ -47,13 +47,17 @@ int main_init(int argc, const char **argv, const char *log_filename, socket_init
     // Ottieni la porta e l'indirizzo scelti dall'utente
     uint16_t port = DEFAULT_PORT;
     const char *ip = DEFAULT_HOST;
-    if (read_argv_socket_params(&port, &ip, argc, argv) == -1)
+    if (read_argv_socket_params(&port, &ip, argc, argv) == -1) {
+        close_logging();
         return show_usage(argv[0]);
+    }
 
     // Avvia la socket principale
     socket_fd = socket_init(ip, port);
-    if (socket_fd == -1)
+    if (socket_fd == -1) {
+        close_logging();
         return show_usage(argv[0]);
+    }
 
     log_message(NULL,
                 "Processo %s (pid=%d) avviato con indirizzo IP %s e porta %d\n",

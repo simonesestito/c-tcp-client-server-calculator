@@ -2,6 +2,8 @@
 #include <wchar.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <strings.h>
+#include <stdio.h>
 
 /**
  * Simboli Unicode per disegnare il grafico
@@ -53,7 +55,7 @@ unsigned int max(const unsigned int *data, size_t data_len) {
  * @param original_data Dati da mostrare
  * @param data_len Dimensione dei dati
  */
-void plot_chart(unsigned int *original_data, size_t data_len) {
+void plot_chart(const unsigned int *original_data, size_t data_len) {
     if (data_len == 0)
         return;
 
@@ -69,6 +71,9 @@ void plot_chart(unsigned int *original_data, size_t data_len) {
     size_t normalized_data_len = max_columns < data_len ? max_columns : data_len;
     unsigned int normalized_data[normalized_data_len];
     size_t data_offset = data_len - normalized_data_len;
+    fprintf(stderr, "NORM: %zu\n", normalized_data_len);
+    fprintf(stderr, "DLEN: %zu\n", data_len);
+    fprintf(stderr, "MCOL: %d\n", max_columns);
     for (size_t i = 0; i < normalized_data_len; i++) {
         normalized_data[i] = original_data[data_offset + i];
     }
