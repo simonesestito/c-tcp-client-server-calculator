@@ -11,7 +11,7 @@
 /**
  * Tempo di attesa per poll() e quindi wait_until()
  */
-#define POLL_WAIT_TIMEOUT 2000
+#define POLL_WAIT_TIMEOUT 3000
 
 /**
  * Raccogli le informazioni del client

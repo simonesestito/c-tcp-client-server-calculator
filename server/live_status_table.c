@@ -156,11 +156,20 @@ void show_table(void) {
     wprintf(L"\n");
 }
 
+/**
+ * Inizializza la tabella
+ */
 void init_status_table() {
     pthread_mutex_init(&mutex, NULL);
     pthread_create(&table_thread, NULL, (void *(*) (void *)) show_table, NULL);
 }
 
+/**
+ * Registra un nuovo client in questa tabella
+ *
+ * @param client Informazioni sul client
+ * @param thread_id ID POSIX del thread che lo sta gestendo
+ */
 void register_client(const struct sock_info *client, pthread_t thread_id) {
     pthread_mutex_lock(&mutex);
 
@@ -187,6 +196,11 @@ void register_client(const struct sock_info *client, pthread_t thread_id) {
     pthread_mutex_unlock(&mutex);
 }
 
+/**
+ * Rimuovi un client. Solitamente, quando il thread che lo gestiva sta terminando
+ *
+ * @param client Informazioni sul client gestito
+ */
 void remove_client(const struct sock_info *client) {
     pthread_mutex_lock(&mutex);
 
@@ -203,6 +217,11 @@ void remove_client(const struct sock_info *client) {
     pthread_mutex_unlock(&mutex);
 }
 
+/**
+ * Aggiungi una nuova operazione effettuata dal client
+ *
+ * @param client Client che effettua l'operazione
+ */
 void add_client_operation(const struct sock_info *client) {
     pthread_mutex_lock(&mutex);
 
@@ -217,6 +236,11 @@ void add_client_operation(const struct sock_info *client) {
     pthread_mutex_unlock(&mutex);
 }
 
+/**
+ * Termina la visualizzazione della tabella,
+ * e termina anche tutte le connessioni gestite,
+ * attendendo i rispettivi thread.
+ */
 void stop_status_table() {
     // Chiudi tutti i file descriptor
     // Join tutti i thread

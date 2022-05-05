@@ -40,7 +40,7 @@ int bind_server(const char *ip, uint16_t port) {
     server_address.sin_port = htons(port); // Imposta la porta
     server_address.sin_family = AF_INET; // Imposta IPv4
 
-    // Prova ad impostare l'indirizzo IP
+    // Prova a impostare l'indirizzo IP
     if (inet_pton(AF_INET, ip, &(server_address.sin_addr)) != 1) {
         log_message(NULL, L"ERRORE: Indirizzo IP invalido\n");
         return -1;
@@ -53,8 +53,13 @@ int bind_server(const char *ip, uint16_t port) {
         return -1;
     }
 
+    // Permetti di fare il bind sulla porta anche se ancora in TIME_WAIT (visibile da netstat)
+    int enable = 1;
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+        log_errno(NULL, "Errore in setsockopt(SO_REUSEADDR)");
+
     // Esegui il bind
-    if (bind(socket_fd, (const struct sockaddr*) &server_address, sizeof(server_address)) == -1) {
+    if (bind(socket_fd, (const struct sockaddr *) &server_address, sizeof(server_address)) == -1) {
         log_errno(NULL, "Errore nel bind del socket");
         return -1;
     }
@@ -68,25 +73,35 @@ int bind_server(const char *ip, uint16_t port) {
     return socket_fd;
 }
 
-/**                                                   * Resta in attesa di dati sul file descriptor.
- *                                                    * Utilizza poll()                                    * (e non select(), per via delle limitazioni scritte
- nel man)
+/**
+ * Resta in attesa di dati sul file descriptor.
+ *
+ * Utilizza poll()
+ * (e non select(), per via delle limitazioni scritte nel man)
  * per:
- * - avere subito dati, se arrivano                   * - ogni intervallo di tempo, controllare se il running_flag                                              *   indica ancora uno stato di esecuzione;           *   in caso contrario, termina l'attesa.             *                                                    * @param fd File descriptor da osservare             * @param running_flag Flag che indica se continuare
- *          ad ascoltare (= 1), o terminare (= 0).    */                                                  void wait_until(int fd, const int *running_flag) {
-     struct pollfd poll_info;
-     poll_info.fd = fd;
-     poll_info.events = POLLIN;
-     poll_info.revents = 0;
+ * - avere subito dati, se arrivano
+ * - ogni intervallo di tempo, controllare se il running_flag
+ *   indica ancora uno stato di esecuzione;
+ *   in caso contrario, termina l'attesa.
+ *
+ * @param fd File descriptor da osservare
+ * @param running_flag Flag che indica se continuare
+ *          ad ascoltare (= 1), o terminare (= 0).
+ */
+void wait_until(int fd, const int *running_flag) {
+    struct pollfd poll_info;
+    poll_info.fd = fd;
+    poll_info.events = POLLIN;
+    poll_info.revents = 0;
 
-     int poll_res;
-     
-     while ((poll_res = poll(&poll_info, 1, POLL_WAIT_TIMEOUT)) == 0 && *running_flag) {
-         // Aspetta ancora
-     }
+    int poll_res;
 
-     if (poll_res < 0) {
-         // Errore
-         perror("Errore poll in wait_until");
-     }
+    while ((poll_res = poll(&poll_info, 1, POLL_WAIT_TIMEOUT)) == 0 && *running_flag) {
+        // Aspetta ancora
+    }
+
+    if (poll_res < 0) {
+        // Errore
+        perror("Errore poll in wait_until");
+    }
 }

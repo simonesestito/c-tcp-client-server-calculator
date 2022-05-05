@@ -70,7 +70,7 @@ void add_client_operation(const struct sock_info *client);
 /**
  * Termina la visualizzazione della tabella,
  * e termina anche tutte le connessioni gestite,
- * attendendedno i rispettivi thread.
+ * attendendo i rispettivi thread.
  */
 void stop_status_table();
 

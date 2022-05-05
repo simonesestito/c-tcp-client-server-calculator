@@ -79,20 +79,7 @@ void elaborate_request(const struct sock_info *client_info) {
 
     remove_client(client_info);
     free(line);
-
-
-
     fflush(client_info->socket_file);
-    perror("fflush");
-
-    shutdown(fileno(client_info->socket_file), SHUT_RD);
-    perror("shutdown R");
-
-    shutdown(fileno(client_info->socket_file), SHUT_WR);
-    perror("shutdown W");
-
     fclose(client_info->socket_file);
-    perror("close");
-
     free((struct sock_info *) client_info);
 }
