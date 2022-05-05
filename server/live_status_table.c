@@ -188,7 +188,7 @@ void register_client(const struct sock_info *client, pthread_t thread_id) {
     if (i == connection_items_size) {
         // Aumenta lo spazio allocato
         connection_items_size *= 2;
-        connection_items = realloc(connection_items, connection_items_size);
+        connection_items = realloc(connection_items, connection_items_size * sizeof(struct live_status_item*));
     }
     connection_items[i] = item;
 
@@ -226,7 +226,7 @@ void add_client_operation(const struct sock_info *client) {
 
     // Trova il client nell'elenco
     for (size_t i = 0; i < connection_items_size; i++) {
-        if (connection_items[i]->client == client) {
+        if (connection_items[i] != NULL && connection_items[i]->client == client) {
             // Aggiungi una nuova operazione
             connection_items[i]->operations++;
         }

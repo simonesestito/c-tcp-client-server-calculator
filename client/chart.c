@@ -20,9 +20,12 @@
  * Trova il numero minimo dall'array, non vuoto
  * @param data Array in cui trovare il minimo
  * @param data_len Dimensione dell'array
- * @return Il minimo numero trovato
+ * @return Il minimo numero trovato, o zero.
  */
 unsigned int min(const unsigned int *data, size_t data_len) {
+    if (data_len == 0)
+        return 0;
+
     unsigned int min_number = data[0];
     for (size_t i = 1; i < data_len; i++) {
         if (data[i] < min_number)
@@ -38,6 +41,9 @@ unsigned int min(const unsigned int *data, size_t data_len) {
  * @return Il massimo numero trovato
  */
 unsigned int max(const unsigned int *data, size_t data_len) {
+    if (data_len == 0)
+        return 0;
+
     unsigned long max_number = data[0];
     for (int i = 1; i < data_len; i++) {
         if (data[i] > max_number)
@@ -56,9 +62,6 @@ unsigned int max(const unsigned int *data, size_t data_len) {
  * @param data_len Dimensione dei dati
  */
 void plot_chart(const unsigned int *original_data, size_t data_len) {
-    if (data_len == 0)
-        return;
-
     // Pulisci schermo
     wprintf(L"\e[1;1H\e[2J");
 
@@ -71,9 +74,6 @@ void plot_chart(const unsigned int *original_data, size_t data_len) {
     size_t normalized_data_len = max_columns < data_len ? max_columns : data_len;
     unsigned int normalized_data[normalized_data_len];
     size_t data_offset = data_len - normalized_data_len;
-    fprintf(stderr, "NORM: %zu\n", normalized_data_len);
-    fprintf(stderr, "DLEN: %zu\n", data_len);
-    fprintf(stderr, "MCOL: %d\n", max_columns);
     for (size_t i = 0; i < normalized_data_len; i++) {
         normalized_data[i] = original_data[data_offset + i];
     }

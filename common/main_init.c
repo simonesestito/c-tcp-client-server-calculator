@@ -26,9 +26,12 @@ void _handle_exit() {
  * @param argc Numero degli argomenti
  * @param argv Argomenti in input
  * @param socket_init Azione di inizializzazione della socket principale
+ * @param ip Dove scrivere l'indirizzo IP ricevuto
+ * @param port Dove scrivere la porta ricevuta
  * @return 0 se tutto ok, -1 in caso di errore.
  */
-int main_init(int argc, const char **argv, const char *log_filename, socket_initializer_t socket_init) {
+int main_init(int argc, const char **argv, const char *log_filename, socket_initializer_t socket_init, const char **ip,
+              uint16_t *port) {
     // Dato che verranno usati wchar_t, il terminale deve essere
     // in modalità "wide charset" e serve impostare il locale.
     // Tutte le printf dovranno essere wprintf, altrimenti
@@ -45,23 +48,29 @@ int main_init(int argc, const char **argv, const char *log_filename, socket_init
         return EXIT_FAILURE;
 
     // Ottieni la porta e l'indirizzo scelti dall'utente
-    uint16_t port = DEFAULT_PORT;
-    const char *ip = DEFAULT_HOST;
-    if (read_argv_socket_params(&port, &ip, argc, argv) == -1) {
+    uint16_t _port = DEFAULT_PORT;
+    const char *_ip = DEFAULT_HOST;
+    if (read_argv_socket_params(&_port, &_ip, argc, argv) == -1) {
         close_logging();
         return show_usage(argv[0]);
     }
 
     // Avvia la socket principale
-    socket_fd = socket_init(ip, port);
-    if (socket_fd == -1) {
-        close_logging();
-        return show_usage(argv[0]);
+    if (socket_init != NULL) {
+        socket_fd = socket_init(_ip, _port);
+        if (socket_fd == -1) {
+            close_logging();
+            return show_usage(argv[0]);
+        }
     }
+
+    // IP e porta corretti, inviali alla funzione invocante
+    if (ip != NULL) *ip = _ip;
+    if (port != NULL) *port = _port;
 
     log_message(NULL,
                 "Processo %s (pid=%d) avviato con indirizzo IP %s e porta %d\n",
-                argv[0], getpid(), ip, port);
+                argv[0], getpid(), _ip, _port);
 
     return 0;
 }

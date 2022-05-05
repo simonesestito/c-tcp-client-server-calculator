@@ -148,7 +148,7 @@ int log_new_start(const char *filename) {
     struct tm current_date = *localtime(&current_time);
 
     fprintf(open_log_file(), "\n===================================\n");
-    fprintf(open_log_file(), "====== Nuovo avvio del server =====\n");
+    fprintf(open_log_file(), "=========== Nuovo avvio ===========\n");
     fprintf(open_log_file(), "======= %02d/%02d/%d %02d:%02d:%02d =======\n",
             current_date.tm_mday,
             current_date.tm_mon + 1,

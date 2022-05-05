@@ -37,28 +37,6 @@ struct sock_info {
 uint16_t str_to_uint16(const char *str);
 
 /**
- * Crea il socket per il server, esegui il bind, metti in ascolto.
- *
- * Implementata solo nel programma SERVER.
- *
- * @param ip Indirizzo IP del server
- * @param port Porta del server
- * @return -1 in caso di errore, il file descriptor del server socket altrimenti
- */
-int bind_server(const char *ip, uint16_t port);
-
-/**
- * Connettiti al server.
- *
- * Implementata solo nel programma CLIENT.
- *
- * @param ip Indirizzo IP del server
- * @param port Porta del server
- * @return -1 in caso di errore, il file descriptor del server socket altrimenti
- */
-int connect_to_server(const char *ip, uint16_t port);
-
-/**
  * Resta in attesa di dati sul file descriptor.
  *
  * Utilizza poll()

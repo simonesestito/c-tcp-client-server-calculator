@@ -18,11 +18,13 @@ typedef int (*socket_initializer_t)(const char *, uint16_t);
  *
  * @param argc Numero degli argomenti
  * @param argv Argomenti in input
- * @param log_filename Nome del file di log
  * @param socket_init Azione di inizializzazione della socket principale
+ * @param ip Dove scrivere l'indirizzo IP ricevuto
+ * @param port Dove scrivere la porta ricevuta
  * @return 0 se tutto ok, -1 in caso di errore.
  */
-int main_init(int argc, const char **argv, const char *log_filename, socket_initializer_t socket_init);
+int main_init(int argc, const char **argv, const char *log_filename, socket_initializer_t socket_init, const char **ip,
+              uint16_t *port);
 
 /**
  * Mostra il messaggio di utilizzo.

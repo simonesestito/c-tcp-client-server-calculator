@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <wchar.h>
-#include "../common/socket_utils.h"
+#include "socket_utils.h"
 #include "request_worker.h"
 #include "../common/logger.h"
 #include "../common/main_init.h"
@@ -21,7 +21,7 @@ void handle_request(int client_socket, const struct sockaddr_in *client);
 
 int main(int argc, const char **argv) {
     // Inizializza
-    if (main_init(argc, argv, "server.log", bind_server) != 0)
+    if (main_init(argc, argv, "server.log", bind_server, NULL, NULL) != 0)
         return EXIT_FAILURE;
 
     // Mostra lo stato in live su stdout
