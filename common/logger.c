@@ -83,6 +83,7 @@ void log_message(const struct sock_info *client_info, const char *restrict forma
     // Qui ci interessa ottenere il lock sul file solo tra i thread
     fwrite(log_line, sizeof(char), strlen(log_line), open_log_file());
     fflush(open_log_file());
+    wprintf(L"%s", log_line);
 }
 
 /**

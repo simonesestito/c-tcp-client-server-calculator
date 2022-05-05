@@ -1,6 +1,7 @@
 #include "live_status_table.h"
 #include "../common/calc_utils.h"
 #include "../common/logger.h"
+#include "../common/main_init.h"
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -21,12 +22,6 @@
 #define LEFT_DIVIDER ((wchar_t) 0x2524)
 #define TOP_DIVIDER ((wchar_t) 0x2534)
 #define BOTTOM_DIVIDER ((wchar_t) 0x252C)
-
-
-/**
- * Variabile globale per gestire finchè il server è in esecuzione
- */
-int working = 1;
 
 /**
  * Array degli elementi in visualizzazione nella tabella
@@ -54,7 +49,7 @@ pthread_t table_thread;
  * Si aggiorna ogni intervallo di millisecondi.
  */
 void show_table(void) {
-    while (working == 1) {
+    while (socket_fd > 0) {
         pthread_mutex_lock(&mutex);
 
         // Pulisci schermo
@@ -83,7 +78,7 @@ void show_table(void) {
                 VERTICAL_BAR);
 
         // Mostra le righe
-        for (size_t i = 0; connection_items != NULL && i < connection_items_size; i++) {
+        for (size_t i = 0; i < connection_items_size; i++) {
             if (connection_items[i] == NULL)
                 continue;
 
@@ -138,7 +133,7 @@ void show_table(void) {
 
     // Mostra l'animazione durante la chiusura
     int visual_step = 0;
-    while (working == 0) {
+    while (socket_fd == 0) {
         char loading_char;
         switch (visual_step) {
             case 0:
@@ -168,6 +163,7 @@ void show_table(void) {
 void init_status_table() {
     pthread_mutex_init(&mutex, NULL);
     pthread_create(&table_thread, NULL, (void *(*) (void *)) show_table, NULL);
+    connection_items = calloc(connection_items_size, sizeof(struct live_status_item*));
 }
 
 /**
@@ -185,9 +181,6 @@ void register_client(const struct sock_info *client, pthread_t thread_id) {
     item->operations = 0;
     item->start_seconds = get_current_microseconds() / 1000000;
     item->thread_id = thread_id;
-
-    if (connection_items == NULL)
-        connection_items = calloc(connection_items_size, sizeof(struct live_status_item *));
 
     // Inserisci nella prima cella libera
     size_t i = 0;
@@ -248,14 +241,11 @@ void add_client_operation(const struct sock_info *client) {
  * attendendo i rispettivi thread.
  */
 void stop_status_table() {
-    // Working è già stata impostata a zero nel main a questo punto.
+    // socket_fd è già stata impostata a zero nel main a questo punto.
 
     // Chiudi tutti i file descriptor
     // Join tutti i thread
     for (size_t i = 0; i < connection_items_size; i++) {
-        if (connection_items == NULL)
-            continue;
-
         struct live_status_item* item = connection_items[i];
         if (item == NULL)
             continue;
@@ -269,7 +259,7 @@ void stop_status_table() {
     free(connection_items);
 
     // Interrompi anche l'animazione di chiusura
-    working = -1;
+    socket_fd = -1;
     pthread_join(table_thread, NULL);
 
     pthread_mutex_destroy(&mutex);
