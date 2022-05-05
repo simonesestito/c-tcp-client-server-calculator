@@ -1,13 +1,9 @@
-#include <wchar.h>
-#include <locale.h>
+#include <stdlib.h>
+#include "../common/socket_utils.h"
+#include "../common/main_init.h"
 
 int main(int argc, const char **argv) {
-    // Dato che verranno usati wchar_t, il terminale deve essere
-    // in modalità "wide charset" e serve impostare il locale.
-    // Tutte le printf dovranno essere wprintf, altrimenti
-    // il comportamento non è definito nelle specifiche del C
-    setlocale(LC_CTYPE, "");
-
-
-    wprintf(L"Sono il client!\n");
+    // Inizializza
+    if (main_init(argc, argv, "client.log", connect_to_server) != 0)
+        return EXIT_FAILURE;
 }

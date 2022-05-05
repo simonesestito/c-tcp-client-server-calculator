@@ -109,13 +109,35 @@ void log_result(const struct sock_info *client_info,
 }
 
 /**
+ * Apri il file di log, se non è ancora stato aperto.
+ * Usa la modalità di append.
+ *
+ * @param filename Nome del file di log
+ * @return File pointer al log
+ */
+FILE *_open_log_file(const char *filename) {
+    static FILE *log_file = NULL;
+
+    if (log_file == NULL) {
+        log_file = fopen(filename, "a");
+        // FIXME: il file di log deve essere lo stesso tra più esecuzioni del programma o può variare?
+        // FIXME: ci possono essere istanze multiple del server?
+        // FIXME: cerca il prossimo file libero e non bloccato (1), (2), (3), etc??
+    }
+
+    return log_file;
+}
+
+/**
  * Esegui il log di inizio di una nuova sessione del server.
  *
  * Utile dato che il log è in append, per capire di che avvio si sta parlando.
+ *
+ * @param filename Nome del file di log da usare
  * @return -1 in caso di errore, 0 se con successo.
  */
-int log_new_start() {
-    FILE *log_file = open_log_file();
+int log_new_start(const char *filename) {
+    FILE *log_file = _open_log_file(filename);
     if (log_file == NULL) {
         perror("Errore nell'apertura del file di log.");
         return -1;
@@ -127,12 +149,12 @@ int log_new_start() {
     fprintf(open_log_file(), "\n===================================\n");
     fprintf(open_log_file(), "====== Nuovo avvio del server =====\n");
     fprintf(open_log_file(), "======= %02d/%02d/%d %02d:%02d:%02d =======\n",
-             current_date.tm_mday,
-             current_date.tm_mon + 1,
-             current_date.tm_year + 1900,
-             current_date.tm_hour,
-             current_date.tm_min,
-             current_date.tm_sec);
+            current_date.tm_mday,
+            current_date.tm_mon + 1,
+            current_date.tm_year + 1900,
+            current_date.tm_hour,
+            current_date.tm_min,
+            current_date.tm_sec);
     fprintf(open_log_file(), "===================================\n");
     fflush(open_log_file());
     return 0;
@@ -145,14 +167,5 @@ int log_new_start() {
  * @return File pointer al log
  */
 FILE *open_log_file() {
-    static FILE *log_file = NULL;
-
-    if (log_file == NULL) {
-        log_file = fopen(DEFAULT_LOG_FILENAME, "a");
-        // FIXME: il file di log deve essere lo stesso tra più esecuzioni del programma o può variare?
-        // FIXME: ci possono essere istanze multiple del server?
-        // FIXME: cerca il prossimo file libero e non bloccato (1), (2), (3), etc??
-    }
-
-    return log_file;
+    return _open_log_file(NULL);
 }

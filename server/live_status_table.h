@@ -1,17 +1,12 @@
 #ifndef SERVER_LIVE_STATUS_TABLE_H
 #define SERVER_LIVE_STATUS_TABLE_H
 
-#include "socket_utils.h"
+#include "../common/socket_utils.h"
 
 /**
  * Microsecondi dopo cui si deve aggiornare la tabella
  */
 #define TABLE_MICROSECONDS_REFRESH (500 * 1000)
-
-/**
- * Variabile globale per gestire finchè il server è in esecuzione
- */
-extern int working;
 
 /**
  * Informazioni riguardo una connessione con un client,

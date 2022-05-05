@@ -1,7 +1,7 @@
 #ifndef SERVER_LOGGER_H
 #define SERVER_LOGGER_H
 
-#include "request_worker.h"
+#include "socket_utils.h"
 #include "calc_utils.h"
 #include <wchar.h>
 
@@ -15,11 +15,6 @@
  * Dimensione massima di una linea del messaggio di log.
  */
 #define LOG_LINE_MAX_SIZE 500
-
-/**
- * Nome del file di log
- */
-#define DEFAULT_LOG_FILENAME "server.log"
 
 /**
  * Quanti sono gli ultimi log salvati nel vettore
@@ -81,9 +76,11 @@ void log_result(const struct sock_info *client_info,
  * Esegui il log di inizio di una nuova sessione del server.
  *
  * Utile dato che il log è in append, per capire di che avvio si sta parlando.
+ *
+ * @param filename Nome del file di log da usare
  * @return -1 in caso di errore, 0 se con successo.
  */
-int log_new_start();
+int log_new_start(const char *filename);
 
 /**
  * Apri il file di log, se non è ancora stato aperto.

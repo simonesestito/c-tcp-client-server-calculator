@@ -9,6 +9,6 @@
  * @param data Dati da mostrare
  * @param data_len Dimensione dei dati
  */
-void plot_chart(unsigned long *data, size_t data_len);
+void plot_chart(unsigned int *data, size_t data_len);
 
 #endif //HW2_CHART_H

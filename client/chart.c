@@ -20,8 +20,8 @@
  * @param data_len Dimensione dell'array
  * @return Il minimo numero trovato
  */
-int min(unsigned long *data, size_t data_len) {
-    unsigned long min_number = data[0];
+unsigned int min(const unsigned int *data, size_t data_len) {
+    unsigned int min_number = data[0];
     for (size_t i = 1; i < data_len; i++) {
         if (data[i] < min_number)
             min_number = data[i];
@@ -35,7 +35,7 @@ int min(unsigned long *data, size_t data_len) {
  * @param data_len Dimensione dell'array
  * @return Il massimo numero trovato
  */
-int max(unsigned long *data, size_t data_len) {
+unsigned int max(const unsigned int *data, size_t data_len)  {
     unsigned long max_number = data[0];
     for (int i = 1; i < data_len; i++) {
         if (data[i] > max_number)
@@ -53,7 +53,7 @@ int max(unsigned long *data, size_t data_len) {
  * @param data Dati da mostrare
  * @param data_len Dimensione dei dati
  */
-void plot_chart(unsigned long *data, size_t data_len) {
+void plot_chart(unsigned int *data, size_t data_len) {
     if (data_len == 0)
         return;
 
@@ -64,8 +64,8 @@ void plot_chart(unsigned long *data, size_t data_len) {
     
     // Trova il dato minore e maggiore.
     // Il minimo verrà mostrato ad altezza 1
-    int min_data = min(data, data_len);
-    int max_data = max(data, data_len);
+    unsigned int min_data = min(data, data_len);
+    unsigned int max_data = max(data, data_len);
     
     wprintf(L"%lc\n", ARROW_UP);
     // Itera sulle righe (altezze) del grafico
@@ -74,12 +74,12 @@ void plot_chart(unsigned long *data, size_t data_len) {
         // Itera sugli elementi dei dati
         for (int i = 0; i < data_len; i++) {
             // Mostra il carattere corrispondente alla cella del grafico
-            
-            int previous_element = i == 0 ? 0 : data[i-1];
+
+            unsigned int previous_element = i == 0 ? 0 : data[i-1];
             
             // Il minimo e massimo tra l'elemento corrente e quello precedente
-            int min_previous = previous_element < data[i] ? previous_element : data[i];
-            int max_previous = previous_element > data[i] ? previous_element : data[i];
+            unsigned int min_previous = previous_element < data[i] ? previous_element : data[i];
+            unsigned int max_previous = previous_element > data[i] ? previous_element : data[i];
 
             // Stampa la linea verticale per collegare
             // l'elemento del grafico precedente al corrente

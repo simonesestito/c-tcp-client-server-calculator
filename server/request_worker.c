@@ -1,6 +1,6 @@
 #include "request_worker.h"
-#include "logger.h"
-#include "calc_utils.h"
+#include "../common/logger.h"
+#include "../common/main_init.h"
 #include "live_status_table.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,8 +29,8 @@ void elaborate_request(const struct sock_info *client_info) {
     do {
         // Ottieni la riga dell'operazione,
         // aspettando dati e vedendo se serve interrompere
-        wait_until(fileno(client_info->socket_file), &working);
-        if (!working) break;
+        wait_until(fileno(client_info->socket_file), &socket_fd);
+        if (socket_fd <= 0) break;
 
         chars_read = getline(&line, &line_size, client_info->socket_file);
         if (chars_read < 0) break;

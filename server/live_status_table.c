@@ -1,6 +1,6 @@
 #include "live_status_table.h"
-#include "calc_utils.h"
-#include "logger.h"
+#include "../common/calc_utils.h"
+#include "../common/logger.h"
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
