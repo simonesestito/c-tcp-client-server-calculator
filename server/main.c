@@ -21,7 +21,7 @@ void handle_request(int client_socket, const struct sockaddr_in *client);
 
 int main(int argc, const char **argv) {
     // Inizializza
-    if (main_init(argc, argv, "server.log", bind_server, NULL, NULL) != 0)
+    if (main_init(argc, argv, "server", bind_server, NULL, NULL) != 0)
         return EXIT_FAILURE;
 
     // Mostra lo stato in live su stdout

@@ -121,7 +121,7 @@ void show_table(void) {
 
         // Scrivi le ultime righe del log
         flockfile(stdout);
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < LOGS_ARRAY_SIZE; i++) {
             // Leggi dal vettore circolare
             int real_index = (logs_index + i) % LOGS_ARRAY_SIZE;
             if (logs_array[real_index] != NULL)

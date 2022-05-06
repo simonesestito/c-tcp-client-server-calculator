@@ -28,7 +28,7 @@
 /**
  * Quanti sono gli ultimi log salvati nel vettore
  */
-#define LOGS_ARRAY_SIZE 5
+#define LOGS_ARRAY_SIZE 8
 
 /**
  * Ultimi messaggi di log scritti nel file

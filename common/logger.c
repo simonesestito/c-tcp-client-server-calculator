@@ -4,6 +4,13 @@
 #include <errno.h>
 #include <time.h>
 #include <malloc.h>
+#include <sys/file.h>
+
+/**
+ * Numero massimo di file di log possibili.
+ * Se sono tutti non disponibili, non provare oltre.
+ */
+#define MAX_LOG_FILES 10
 
 /**
  * Ultimi messaggi di log scritti nel file
@@ -76,17 +83,55 @@ void log_result(const struct sock_info *client_info,
  * Apri il file di log, se non è ancora stato aperto.
  * Usa la modalità di append.
  *
- * @param filename Nome del file di log
+ * @param filename Nome del file di log di default, senza estensione .log
+ * @param log_counter Indice del nome del file di log effettivamente usato,
+ *          provando fino a MAX_LOG_FILES.
+ *          Formato del file finale: filename (%d).log
  * @return File pointer al log
  */
-FILE *_open_log_file(const char *filename) {
+FILE *_open_log_file(const char *original_filename, unsigned short *log_counter) {
     static FILE *log_file = NULL;
 
-    if (log_file == NULL && filename != NULL) {
-        log_file = fopen(filename, "a");
-        // TODO: cerca il prossimo file libero e non bloccato (1), (2), (3), (lock file try?)
-        // TODO: deve dire al chiamante e all'utente su che file sta scrivendo
+    if (original_filename == NULL || log_counter == NULL || log_file != NULL)
+        return log_file;
+
+    // Numero del file di log che sto provando
+    *log_counter = 0;
+
+    // Nome del file di log del numero corrispondente a file_counter
+    size_t count_filename_len = strlen(original_filename) + 9;
+    char count_filename[count_filename_len];
+    strcpy(count_filename, original_filename);
+
+    while (log_file == NULL && *log_counter < MAX_LOG_FILES) {
+        // Aggiorna il nome del file di log in base al numero del tentativo
+        if (*log_counter > 0) {
+            snprintf(count_filename, count_filename_len, "%s (%d).log", original_filename, *log_counter);
+        }
+
+        log_file = fopen(count_filename, "a");
+        if (log_file == NULL) {
+            // Errore nell'apertura del file
+            perror("Errore nell'apertura del file di log.");
+        } else if (flock(fileno(log_file), LOCK_EX | LOCK_NB) == -1) {
+            // Impossibile acquisire il lock su quel file, quale è la causa?
+            // EWOULDBLOCK => c'è già un lock da un altro PROCESSO.
+            if (errno != EWOULDBLOCK) {
+                // Altro errore imprevisto
+                perror("flock sul file di log");
+            }
+
+            // Errore, scarta questo file.
+            fclose(log_file);
+            log_file = NULL;
+        }
+
+        // Prova al prossimo file
+        (*log_counter)++;
     }
+
+    // Ultima iterazione lo manda oltre il reale numero del tentativo
+    (*log_counter)--;
 
     return log_file;
 }
@@ -100,26 +145,31 @@ FILE *_open_log_file(const char *filename) {
  * @return -1 in caso di errore, 0 se con successo.
  */
 int log_new_start(const char *filename) {
-    FILE *log_file = _open_log_file(filename);
-    if (log_file == NULL) {
-        perror("Errore nell'apertura del file di log.");
+    unsigned short log_file_number = 0;
+    FILE *log_file = _open_log_file(filename, &log_file_number);
+    if (log_file == NULL)
         return -1;
-    }
 
     time_t current_time = time(NULL);
     struct tm current_date = *localtime(&current_time);
 
-    fprintf(open_log_file(), "\n===================================\n");
-    fprintf(open_log_file(), "=========== Nuovo avvio ===========\n");
-    fprintf(open_log_file(), "======= %02d/%02d/%d %02d:%02d:%02d =======\n",
+    log_message(NULL, "===================================\n");
+    log_message(NULL, "=========== Nuovo avvio ===========\n");
+    log_message(NULL, "======= %02d/%02d/%d %02d:%02d:%02d =======\n",
             current_date.tm_mday,
             current_date.tm_mon + 1,
             current_date.tm_year + 1900,
             current_date.tm_hour,
             current_date.tm_min,
             current_date.tm_sec);
-    fprintf(open_log_file(), "===================================\n");
-    fflush(open_log_file());
+    log_message(NULL, "===================================\n");
+
+    // Comunica all'utente su che file di log stiamo scrivendo
+    if (log_file_number == 0)
+        log_message(NULL, "File di log usato: %s.log\n", filename);
+    else
+        log_message(NULL, "File di log usato: %s (%d).log\n", filename, log_file_number);
+
     return 0;
 }
 
@@ -130,7 +180,7 @@ int log_new_start(const char *filename) {
  * @return File pointer al log
  */
 FILE *open_log_file() {
-    return _open_log_file(NULL);
+    return _open_log_file(NULL, NULL);
 }
 
 /**
@@ -141,7 +191,9 @@ void close_logging() {
     for (int i = 0; i < LOGS_ARRAY_SIZE; i++)
         free(logs_array[i]);
 
-    // Chiudi il file di log
-    if (open_log_file() != NULL)
+    // Chiudi il file di log e rimuovi il lock
+    if (open_log_file() != NULL) {
+        flock(fileno(open_log_file()), LOCK_UN);
         fclose(open_log_file());
+    }
 }
