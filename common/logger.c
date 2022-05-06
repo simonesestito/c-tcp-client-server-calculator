@@ -68,14 +68,18 @@ void log_errno(const struct sock_info *client_info, const char *error_msg) {
 void log_result(const struct sock_info *client_info,
                 const char *operation_line,
                 operand_t result,
-                uint64_t start_microseconds,
-                uint64_t end_microseconds) {
+                const struct timestamp *start_time,
+                const struct timestamp *end_time) {
+    long start_microseconds = start_time->microseconds;
+    long end_microseconds = end_time->microseconds;
+    char start_time_str[TIMESTAMP_STRING_SIZE] = {};
+    timestamp_to_string(start_time, start_time_str);
+
     log_message(client_info,
-                "%s = %lf, da %lu a %lu -> %lu microsecondi\n",
+                "%s = %lf, da %s per %luus\n",
                 operation_line,
                 result,
-                start_microseconds,
-                end_microseconds,
+                start_time_str,
                 end_microseconds - start_microseconds);
 }
 
@@ -102,6 +106,7 @@ FILE *_open_log_file(const char *original_filename, unsigned short *log_counter)
     size_t count_filename_len = strlen(original_filename) + 9;
     char count_filename[count_filename_len];
     strcpy(count_filename, original_filename);
+    strcat(count_filename, ".log");
 
     while (log_file == NULL && *log_counter < MAX_LOG_FILES) {
         // Aggiorna il nome del file di log in base al numero del tentativo
@@ -112,7 +117,7 @@ FILE *_open_log_file(const char *original_filename, unsigned short *log_counter)
         log_file = fopen(count_filename, "a");
         if (log_file == NULL) {
             // Errore nell'apertura del file
-            perror("Errore nell'apertura del file di log.");
+            perror("Errore nell'apertura del file di log");
         } else if (flock(fileno(log_file), LOCK_EX | LOCK_NB) == -1) {
             // Impossibile acquisire il lock su quel file, quale è la causa?
             // EWOULDBLOCK => c'è già un lock da un altro PROCESSO.
