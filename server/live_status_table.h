@@ -27,7 +27,7 @@ struct live_status_item {
     /**
      * Tempo di inizio del thread
      */
-    unsigned int start_seconds;
+    uint64_t start_seconds;
 
     /**
      * Numero di operazioni eseguite finora dal client

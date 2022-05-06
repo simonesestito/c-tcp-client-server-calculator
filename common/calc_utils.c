@@ -28,15 +28,3 @@ double calculate_operation(operand_t left, char operator, operand_t right) {
             return 0;
     }
 }
-
-/**
- * Ottieni il tempo in microsecondi attuali
- *
- * @return Tempo corrente in microsecondi
- */
-uint64_t get_current_microseconds() {
-    struct timespec current_time;
-    // TODO: Deve essere user-friendly gg/mm/yyyy hh:mm:ss.micros
-    clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
-    return current_time.tv_sec * 1000 * 1000 + current_time.tv_nsec / 1000;
-}

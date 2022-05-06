@@ -73,3 +73,43 @@ int string_to_timestamp(struct timestamp *timestamp, const char *str) {
     timestamp->time.tm_mon -= 1;
     return 0;
 }
+
+/**
+ * Trasforma l'orario (non anche la data) in microsecondi
+ * 
+ * @param timestamp Timestamp da cui prendere l'orario
+ * @return Orario in microsecondi
+ */
+uint64_t timestamp_to_micros(const struct timestamp *timestamp) {
+    uint64_t micros = timestamp->time.tm_hour;
+    micros *= 60;
+    micros += timestamp->time.tm_min;
+    micros *= 60;
+    micros += timestamp->time.tm_sec;
+    micros *= 1000000;
+    micros += timestamp->microseconds;
+    return micros;
+}
+
+/**
+ * Formatta la differenza di due timestamp in una stringa
+ * della grandezza TIMEDIFF_STRING_SIZE.
+ *
+ * @param from Timestamp di partenza
+ * @param to Timestamp di arrivo
+ * @param str Stringa di destinazione della differenza
+ */
+void timediff_to_string(const struct timestamp *from, const struct timestamp *to, char *str) {
+    // Calcola i tempi in microsecondi per fare la differenza
+    uint64_t from_micros = timestamp_to_micros(from);
+    uint64_t to_micros = timestamp_to_micros(to);
+    uint64_t diff_micros = to_micros > from_micros
+        ? to_micros - from_micros
+        : from_micros - to_micros;
+
+    snprintf(str, TIMEDIFF_STRING_SIZE, TIMEDIFF_STRING_FORMAT,
+            diff_micros/(1000000ul*60ul*60ul),
+            (diff_micros/(1000000ul*60ul)) % 60ul,
+            (diff_micros/1000000ul) % 60ul,
+            diff_micros % 1000000ul);
+}

@@ -54,6 +54,11 @@ void show_table(void) {
     while (socket_fd > 0) {
         pthread_mutex_lock(&mutex);
 
+        // Leggi orario attuale
+        struct timestamp current_time;
+        get_timestamp(&current_time);
+        long current_seconds = timestamp_to_micros(&current_time) / 1000000;
+
         // Pulisci schermo
         wprintf(L"\e[1;1H\e[2J");
 
@@ -102,7 +107,7 @@ void show_table(void) {
                     VERTICAL_BAR,
                     connection_items[i]->operations,
                     VERTICAL_BAR,
-                    get_current_microseconds() / 1000000 - connection_items[i]->start_seconds,
+                    current_seconds - connection_items[i]->start_seconds,
                     VERTICAL_BAR);
         }
 
@@ -153,12 +158,17 @@ void init_status_table() {
  */
 void register_client(const struct sock_info *client, pthread_t thread_id) {
     pthread_mutex_lock(&mutex);
+    
+    // Leggi orario attuale
+    struct timestamp current_time;
+    get_timestamp(&current_time);
+    long current_seconds = timestamp_to_micros(&current_time) / 1000000;
 
     // Crea la struttura
     struct live_status_item *item = malloc(sizeof(struct live_status_item));
     item->client = client;
     item->operations = 0;
-    item->start_seconds = get_current_microseconds() / 1000000;
+    item->start_seconds = current_seconds;
     item->thread_id = thread_id;
 
     // Inserisci nella prima cella libera

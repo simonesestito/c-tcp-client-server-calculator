@@ -1,7 +1,7 @@
 #ifndef HW2_MAIN_INIT_H
 #define HW2_MAIN_INIT_H
 
-#include <stdint-gcc.h>
+#include <stdint.h>
 
 /**
  * File descriptor del socket principale (server o client)

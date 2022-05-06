@@ -2,7 +2,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include <errno.h>
-#include <string.h>
+#include <unistd.h>
 #include "../common/calc_utils.h"
 #include "../common/main_init.h"
 #include "../common/logger.h"
@@ -68,8 +68,10 @@ int main(int argc, const char **argv) {
 
         // Apri il socket file descriptor come FILE pointer per usare funzioni
         // di libreria come fprintf e fscanf.
+
+        // FIXME: rimuovere dup(), solo per fdsan
         FILE *socket_input = fdopen(socket_fd, "r");
-        FILE *socket_output = fdopen(socket_fd, "w");
+        FILE *socket_output = fdopen(dup(socket_fd), "w");
 
         if (socket_input == NULL || socket_output == NULL) {
             perror("fdopen");
@@ -160,7 +162,8 @@ void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *le
                           char *operator) {
     // Variabili per la risposta
     operand_t result;
-    unsigned long start_timestamp, end_timestamp;
+    char start_time_str[TIMESTAMP_STRING_SIZE] = {};
+    char end_time_str[TIMESTAMP_STRING_SIZE] = {};
 
     while (socket_fd > 0 && working) {
         // Leggi l'input utente, se non c'è già un input vecchio prima della ri-connessione
@@ -182,28 +185,40 @@ void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *le
         }
 
         // Leggi la risposta
-        int server_read_values = fscanf(socket_input, "%lu %lu %lf", &start_timestamp, &end_timestamp, &result);
-        if (server_read_values == 3) {
-            if (end_timestamp == 0) {
-                // Secondo il protocollo impostato, un errore si segnala con:
-                // - timestamp di fine a zero / vuoto
-                // - il codice di errore dentro il risultato
-                wprintf(L"[ERRORE] %lf %c %lf ha generato un errore: %s\n", *left_operand, *operator,
-                        *right_operand, strerror((int) result));
-            } else {
-                // Risultato ricevuto correttamente, aggiorna il grafico
-                update_chart(end_timestamp - start_timestamp);
+        char server_line[TIMESTAMP_STRING_SIZE*3] = {};
+        fgets(server_line, TIMESTAMP_STRING_SIZE*3, socket_input);
 
-                wprintf(L"[%lu us] %lf %c %lf = %lf\n\n", end_timestamp - start_timestamp, *left_operand, *operator,
-                        *right_operand, result);
-            }
+        if (server_line[0] == '-') {
+            // Caso di errore.
+            // Secondo il protocollo, viene inviato l'errore dopo il prefisso.
+            wprintf(L"[ERRORE] %lf %c %lf: %s\n", *left_operand, *operator, *right_operand, server_line + 1);
+        } else if (1) {
+            // TODO Funzione per il parsing fatto bene, su altro file
+            // Split della linea
+            strncpy(start_time_str, server_line, TIMESTAMP_STRING_SIZE - 1);
+            start_time_str[TIMESTAMP_STRING_SIZE-1] = 0;
+            strncpy(end_time_str, server_line + TIMESTAMP_STRING_SIZE, TIMESTAMP_STRING_SIZE - 1);
+            end_time_str[TIMESTAMP_STRING_SIZE-1] = 0;
 
-            // Pulisci l'input utente ora che è tutto andato a buon fine.
-            // Tenere l'input serve in caso di errore nell'invio al server,
-            // quindi riprovare più tardi.
-            *operator = '\0';
-            *left_operand = 0;
-            *right_operand = 0;
+            // Esegui il parsing dei tempi
+            struct timestamp start_time, end_time;
+            string_to_timestamp(&start_time, start_time_str);
+            string_to_timestamp(&end_time, end_time_str);
+            long start_micros = start_time.microseconds;
+            long end_micros = end_time.microseconds;
+            char diff_str[TIMEDIFF_STRING_SIZE] = {};
+            timediff_to_string(&start_time, &end_time, diff_str);
+
+            // Parsing del risultato
+            result = strtod(server_line + 2*TIMESTAMP_STRING_SIZE, NULL);
+
+            // Risultato ricevuto correttamente, aggiorna il grafico
+            update_chart(end_micros - start_micros);
+
+            wprintf(L">>>   %lf %c %lf = %lf  <<<\n", *left_operand, *operator, *right_operand, result);
+            wprintf(L"Ricezione richiesta: %s\n", start_time_str);
+            wprintf(L"Fine elaborazione:   %s\n", end_time_str);
+            wprintf(L"Tempo trascorso:     %s\n", diff_str);
         } else if (socket_fd == 0 || errno == 0) {
             // C'è stato un EOF, la connessione è stata chiusa.
             log_message(NULL, "La connessione col server è stata chiusa.\n");
@@ -211,7 +226,17 @@ void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *le
             socket_fd = 0;
         } else {
             // La connessione non è chiusa ma c'è stato un errore nell'input
+            // FIXME Da gestire funzione a se.
             log_errno(NULL, "Errore nella ricezione dei dati.\n");
+        }
+
+        if (!feof(socket_input)) {
+            // Pulisci l'input utente ora che è concluso.
+            // Tenere l'input serve in caso di errore di connessione,
+            // quindi per riprovare più tardi.
+            *operator = '\0';
+            *left_operand = 0;
+            *right_operand = 0;
         }
     }
 }

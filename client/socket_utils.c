@@ -1,7 +1,7 @@
 #include "socket_utils.h"
 #include "../common/logger.h"
 #include "../common/main_init.h"
-#include <string.h>
+#include <strings.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 

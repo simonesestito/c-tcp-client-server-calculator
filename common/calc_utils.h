@@ -20,11 +20,4 @@ typedef double operand_t;
  */
 double calculate_operation(operand_t left, char operator, operand_t right);
 
-/**
- * Ottieni il tempo in microsecondi attuali
- *
- * @return Tempo corrente in microsecondi
- */
-uint64_t get_current_microseconds();
-
 #endif //SERVER_CALC_UTILS_H

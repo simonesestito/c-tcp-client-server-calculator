@@ -24,6 +24,17 @@
 #define TIMESTAMP_STRING_FORMAT (TIME_STRING_FORMAT ".%06lu")
 
 /**
+ * Dimensione massima della stringa di differenza di timestamp.
+ * [00h 00m 00s 0000000us]
+ */
+#define TIMEDIFF_STRING_SIZE 22
+
+/**
+ * Formato della stringa di differenza di timestamp
+ */
+#define TIMEDIFF_STRING_FORMAT "%02luh %02lum %02lus %06luus"
+
+/**
  * Rappresenta tutti i dati di un timestamp
  */
 struct timestamp {
@@ -69,5 +80,23 @@ void timestamp_to_string(const struct timestamp *timestamp, char *str);
  * @return -1 in caso di errore nella conversione, 0 altrimenti
  */
 int string_to_timestamp(struct timestamp *timestamp, const char *str);
+
+/**
+ * Trasforma l'orario (non anche la data) in microsecondi
+ *
+ * @param timestamp Timestamp da cui prendere l'orario
+ * @return Orario in microsecondi
+ */
+uint64_t timestamp_to_micros(const struct timestamp *timestamp);
+
+/**
+ * Formatta la differenza di due timestamp in una stringa
+ * della grandezza TIMEDIFF_STRING_FORMAT.
+ *
+ * @param from Timestamp di partenza
+ * @param to Timestamp di arrivo
+ * @param str Stringa di destinazione della differenza
+ */
+void timediff_to_string(const struct timestamp *from, const struct timestamp *to, char *str);
 
 #endif //HW2_TIMESTAMP_H

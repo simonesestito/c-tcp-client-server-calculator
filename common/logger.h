@@ -12,6 +12,7 @@
 
 #include "socket_utils.h"
 #include "calc_utils.h"
+#include "timestamp.h"
 #include <wchar.h>
 
 
@@ -78,8 +79,8 @@ void log_errno(const struct sock_info *client_info, const char *error_msg);
 void log_result(const struct sock_info *client_info,
                 const char *operation_line,
                 operand_t result,
-                uint64_t start_microseconds,
-                uint64_t end_microseconds);
+                const struct timestamp *start_time,
+                const struct timestamp *end_time);
 
 /**
  * Esegui il log di inizio di una nuova sessione del server.
