@@ -4,7 +4,6 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <wchar.h>
-#include <unistd.h>
 #include "socket_utils.h"
 #include "request_worker.h"
 #include "../common/logger.h"

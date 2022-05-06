@@ -22,7 +22,7 @@ int connect_to_server(const char *ip, uint16_t port) {
 
     // Prova a impostare l'indirizzo IP
     if (inet_pton(AF_INET, ip, &(server_address.sin_addr)) != 1) {
-        log_message(NULL, "ERRORE: Indirizzo IP invalido\n");
+        fprintf(stderr, "ERRORE: Indirizzo IP invalido\n");
         return -1;
     }
 
@@ -89,7 +89,7 @@ int reconnect_exponential(const char *ip, uint16_t port) {
     if (reconnect_fd <= 0) {
         // Non si riesce a connettersi nemmeno dopo svariate prove.
         // Ci si rinuncia.
-        log_message(NULL, "Impossibile riconnettersi al server.\n");
+        fprintf(stderr, "Impossibile riconnettersi al server.\n");
     }
 
     return reconnect_fd;

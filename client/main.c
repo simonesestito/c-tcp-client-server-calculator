@@ -37,7 +37,8 @@ void update_chart(unsigned int new_time);
 
 int get_user_input(operand_t *left_operand, operand_t *right_operand, char *operator);
 
-void do_server_operations(FILE* socket_input, FILE* socket_output);
+void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *left_operand, operand_t *right_operand,
+                          char *operator);
 
 int main(int argc, const char **argv) {
     // Inizializza log, connessione, etc
@@ -48,6 +49,10 @@ int main(int argc, const char **argv) {
 
     // Gestisci i casi di SIGPIPE, che altrimenti di default terminano il programma
     handle_signal(SIGPIPE, handle_sigpipe);
+
+    // Variabili per l'operazione
+    operand_t left_operand, right_operand;
+    char operator;
 
     // Finché posso ancora interagire con l'utente...
     while (working && !feof(stdin)) {
@@ -69,7 +74,7 @@ int main(int argc, const char **argv) {
             perror("fdopen");
         } else {
             // Finché ho una connessione al server valida...
-            do_server_operations(socket_input, socket_output);
+            do_server_operations(socket_input, socket_output, &left_operand, &right_operand, &operator);
         }
 
         // Ripulisci la memoria e le risorse utilizzate
@@ -145,25 +150,34 @@ int get_user_input(operand_t *left_operand, operand_t *right_operand, char *oper
  *
  * @param socket_input FILE* dove leggere dati
  * @param socket_output FILE* dove scrivere dati
+ * @param left_operand Scrive l'operando sinistro dell'ultimo input utente
+ * @param right_operand Scrive l'operando destro dell'ultimo input utente
+ * @param operator Scrive l'operatore dell'ultimo input utente
  */
-void do_server_operations(FILE* socket_input, FILE* socket_output) {
-    // Variabili usate nella comunicazione
-    operand_t left_operand, right_operand, result;
-    char operator;
+void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *left_operand, operand_t *right_operand,
+                          char *operator) {
+    // Variabili per la risposta
+    operand_t result;
     unsigned long start_timestamp, end_timestamp;
 
     while (socket_fd > 0 && working) {
         // Leggi l'input utente
-        if (get_user_input(&left_operand, &right_operand, &operator) == -1) {
+        if (get_user_input(left_operand, right_operand, operator) == -1) {
             // Non sarà più possibile avere input utente. Termina.
             socket_fd = 0;
             working = 0;
             continue;
         }
 
-        // Invia i dati al server
-        fprintf(socket_output, "%c %lf %lf\n", operator, left_operand, right_operand);
+        // Invia i dati al server, se c'è ancora la connessione disponibile
+        fprintf(socket_output, "%c %lf %lf\n", *operator, *left_operand, *right_operand);
         fflush(socket_output);
+
+        if (socket_fd == 0) {
+            // C'è stata una SIGPIPE.
+            wprintf(L"La connessione col server è stata chiusa (SIGPIPE in invio).\n");
+            continue;
+        }
 
         // Leggi la risposta
         int server_read_values = fscanf(socket_input, "%lu %lu %lf", &start_timestamp, &end_timestamp, &result);
@@ -172,13 +186,9 @@ void do_server_operations(FILE* socket_input, FILE* socket_output) {
             // Aggiorna il grafico
             update_chart(end_timestamp - start_timestamp);
 
-            wprintf(L"[%lu us] %lf %c %lf = %lf\n\n",
-                    end_timestamp - start_timestamp,
-                    left_operand,
-                    operator,
-                    right_operand,
-                    result);
-        } else if (errno == 0) {
+            wprintf(L"[%lu us] %lf %c %lf = %lf\n\n", end_timestamp - start_timestamp, *left_operand, *operator,
+                    *right_operand, result);
+        } else if (socket_fd == 0 || errno == 0) {
             // C'è stato un EOF, la connessione è stata chiusa.
             log_message(NULL, "La connessione col server è stata chiusa.\n");
             // Esegui ri-connessione

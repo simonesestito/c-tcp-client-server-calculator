@@ -1,6 +1,15 @@
 #ifndef SERVER_LOGGER_H
 #define SERVER_LOGGER_H
 
+/**
+ * Definizione comune delle funzioni di log,
+ * per avere i prototipi utilizzabili anche nel common/.
+ *
+ * Chiaramente, l'implementazione sarà separata in server/logger.c e client/logger.c,
+ * dove in uno c'è anche il discorso dei file di log,
+ * invece nel client è solo su stderr.
+ */
+
 #include "socket_utils.h"
 #include "calc_utils.h"
 #include <wchar.h>
