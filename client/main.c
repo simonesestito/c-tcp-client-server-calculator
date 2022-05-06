@@ -2,6 +2,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include <errno.h>
+#include <string.h>
 #include "../common/calc_utils.h"
 #include "../common/main_init.h"
 #include "../common/logger.h"
@@ -183,11 +184,19 @@ void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *le
         // Leggi la risposta
         int server_read_values = fscanf(socket_input, "%lu %lu %lf", &start_timestamp, &end_timestamp, &result);
         if (server_read_values == 3) {
-            // Risultato ricevuto correttamente, aggiorna il grafico
-            update_chart(end_timestamp - start_timestamp);
+            if (end_timestamp == 0) {
+                // Secondo il protocollo impostato, un errore si segnala con:
+                // - timestamp di fine a zero / vuoto
+                // - il codice di errore dentro il risultato
+                wprintf(L"[ERRORE] %lf %c %lf ha generato un errore: %s\n", *left_operand, *operator,
+                        *right_operand, strerror((int) result));
+            } else {
+                // Risultato ricevuto correttamente, aggiorna il grafico
+                update_chart(end_timestamp - start_timestamp);
 
-            wprintf(L"[%lu us] %lf %c %lf = %lf\n\n", end_timestamp - start_timestamp, *left_operand, *operator,
-                    *right_operand, result);
+                wprintf(L"[%lu us] %lf %c %lf = %lf\n\n", end_timestamp - start_timestamp, *left_operand, *operator,
+                        *right_operand, result);
+            }
 
             // Pulisci l'input utente ora che è tutto andato a buon fine.
             // Tenere l'input serve in caso di errore nell'invio al server,

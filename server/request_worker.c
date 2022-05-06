@@ -7,7 +7,6 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
-#include <signal.h>
 
 /**
  * Elabora la connessione / richiesta ricevuta dal client.
@@ -36,39 +35,47 @@ void elaborate_request(const struct sock_info *client_info) {
         strip_newline(line, &chars_read);
 
         // Inizia a calcolare il tempo
-        uint64_t start_microseconds = get_current_microseconds();
+        uint64_t start_microseconds = get_current_microseconds(), end_microseconds = 0;
 
         // Effettua il parsing della linea e calcola l'operazione
         char operator;
         operand_t left_operand, right_operand;
-        if (sscanf(line, "%c %lf %lf", &operator, &left_operand, &right_operand) < 3) {
+        operand_t result;
+        if (sscanf(line, "%c %lf %lf", &operator, &left_operand, &right_operand) < 3) { // NOLINT(cert-err34-c)
             // Errore nella lettura
             log_message(client_info, "Errore nel parsing dell'operazione\n");
             errno = 0;
-            continue; // TODO: Dare errore in qualche modo
+            // Segnala l'errore al client.
+            // Secondo il protocollo impostato, un errore si segnala con:
+            // - timestamp di fine a zero / vuoto
+            // - il codice di errore dentro il risultato
+            result = EILSEQ;
+        } else {
+            result = calculate_operation(left_operand, operator, right_operand);
+            if (errno == EINVAL) {
+                log_errno(client_info, "Operazione sconosciuta");
+                errno = 0;
+                // Segnala l'errore al client.
+                // Secondo il protocollo impostato, un errore si segnala con:
+                // - timestamp di fine a zero / vuoto
+                // - il codice di errore dentro il risultato
+                result = EINVAL;
+            } else {
+                // Conteggia una nuova operazione nel live status
+                add_client_operation(client_info);
+
+                // Termina il conteggio del tempo
+                end_microseconds = get_current_microseconds();
+
+                // Tieni traccia nel log
+                log_result(client_info, line, result, start_microseconds, end_microseconds);
+            }
+
+            // Invia la risposta al client
+            // [timestamp ricezione richiesta, timestamp invio risposta, risultato operazione]
+            fprintf(client_info->socket_file, "%lu %lu %lf\n", start_microseconds, end_microseconds, result);
+            fflush(client_info->socket_file);
         }
-
-        operand_t result = calculate_operation(left_operand, operator, right_operand);
-        if (errno == EINVAL) {
-            log_errno(client_info, "Operazione sconosciuta");
-            errno = 0;
-            continue;  // TODO: Dare errore in qualche modo
-        }
-
-        // Conteggia una nuova operazione nel live status
-        add_client_operation(client_info);
-
-        // Termina il conteggio del tempo
-        uint64_t end_microseconds = get_current_microseconds();
-
-        // Invia la risposta al client
-        // [timestamp ricezione richiesta, timestamp invio risposta, risultato operazione]
-        fprintf(client_info->socket_file, "%lu %lu %lf\n",
-                start_microseconds, end_microseconds, result);
-        fflush(client_info->socket_file);
-
-        // Tieni traccia nel log
-        log_result(client_info, line, result, start_microseconds, end_microseconds);
     } while (chars_read > 0 && errno == 0);
 
     if (errno != 0 && working) {

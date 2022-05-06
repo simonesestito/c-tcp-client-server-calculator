@@ -49,4 +49,4 @@ softclean:
 clean: softclean
 	rm -f $(CLIENT_EXEC)
 	rm -f $(SERVER_EXEC)
-	rm -f $(wildcard *.log)
+	rm -f *.log
