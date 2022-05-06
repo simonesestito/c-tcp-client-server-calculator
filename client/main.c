@@ -51,8 +51,8 @@ int main(int argc, const char **argv) {
     handle_signal(SIGPIPE, handle_sigpipe);
 
     // Variabili per l'operazione
-    operand_t left_operand, right_operand;
-    char operator;
+    operand_t left_operand = 0, right_operand = 0;
+    char operator = '\0';
 
     // Finché posso ancora interagire con l'utente...
     while (working && !feof(stdin)) {
@@ -77,13 +77,14 @@ int main(int argc, const char **argv) {
             do_server_operations(socket_input, socket_output, &left_operand, &right_operand, &operator);
         }
 
-        // Ripulisci la memoria e le risorse utilizzate
         fclose(socket_input);
         fclose(socket_output);
-        free(chart_data);
-        chart_data = NULL;
-        chart_data_len = 0;
     }
+
+    // Ripulisci la memoria e le risorse utilizzate
+    free(chart_data);
+    chart_data = NULL;
+    chart_data_len = 0;
 
     close_logging();
     // Se la socket è chiusa, dopo i vari tentativi, e l'utente NON ha dato CTRL+D,
@@ -161,8 +162,8 @@ void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *le
     unsigned long start_timestamp, end_timestamp;
 
     while (socket_fd > 0 && working) {
-        // Leggi l'input utente
-        if (get_user_input(left_operand, right_operand, operator) == -1) {
+        // Leggi l'input utente, se non c'è già un input vecchio prima della ri-connessione
+        if (*operator == '\0' && get_user_input(left_operand, right_operand, operator) == -1) {
             // Non sarà più possibile avere input utente. Termina.
             socket_fd = 0;
             working = 0;
@@ -182,12 +183,18 @@ void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *le
         // Leggi la risposta
         int server_read_values = fscanf(socket_input, "%lu %lu %lf", &start_timestamp, &end_timestamp, &result);
         if (server_read_values == 3) {
-            // Risultato ricevuto correttamente
-            // Aggiorna il grafico
+            // Risultato ricevuto correttamente, aggiorna il grafico
             update_chart(end_timestamp - start_timestamp);
 
             wprintf(L"[%lu us] %lf %c %lf = %lf\n\n", end_timestamp - start_timestamp, *left_operand, *operator,
                     *right_operand, result);
+
+            // Pulisci l'input utente ora che è tutto andato a buon fine.
+            // Tenere l'input serve in caso di errore nell'invio al server,
+            // quindi riprovare più tardi.
+            *operator = '\0';
+            *left_operand = 0;
+            *right_operand = 0;
         } else if (socket_fd == 0 || errno == 0) {
             // C'è stato un EOF, la connessione è stata chiusa.
             log_message(NULL, "La connessione col server è stata chiusa.\n");
