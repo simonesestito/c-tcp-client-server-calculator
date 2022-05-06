@@ -7,6 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h>
 
 /**
  * Elabora la connessione / richiesta ricevuta dal client.
@@ -29,8 +30,8 @@ void elaborate_request(const struct sock_info *client_info) {
     do {
         // Ottieni la riga dell'operazione,
         // aspettando dati e vedendo se serve interrompere
-        wait_until(fileno(client_info->socket_file), &socket_fd);
-        if (socket_fd <= 0) break;
+        // FIXME wait_until(fileno(client_info->socket_file), &socket_fd);
+        // FIXME if (socket_fd <= 0) break;
 
         chars_read = getline(&line, &line_size, client_info->socket_file);
         if (chars_read < 0) break;
@@ -48,14 +49,14 @@ void elaborate_request(const struct sock_info *client_info) {
             // Errore nella lettura
             log_message(client_info, "Errore nel parsing dell'operazione\n");
             errno = 0;
-            continue; // TODO: Che fare? Chiudere connessione? break
+            continue; // TODO: Dare errore in qualche modo
         }
 
         operand_t result = calculate_operation(left_operand, operator, right_operand);
         if (errno == EINVAL) {
             log_errno(client_info, "Operazione sconosciuta");
             errno = 0;
-            continue;  // TODO: Che fare? Chiudere connessione? break
+            continue;  // TODO: Dare errore in qualche modo
         }
 
         // Conteggia una nuova operazione nel live status
@@ -74,7 +75,7 @@ void elaborate_request(const struct sock_info *client_info) {
         log_result(client_info, line, result, start_microseconds, end_microseconds);
     } while (chars_read > 0 && errno == 0);
 
-    if (errno != 0) {
+    if (errno != 0 && working) {
         log_errno(client_info, "Impossibile leggere la linea");
     }
 

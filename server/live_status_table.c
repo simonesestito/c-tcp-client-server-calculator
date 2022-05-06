@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <arpa/inet.h>
+#include <signal.h>
+#include <errno.h>
 
 /**
  * Simboli Unicode per disegnare la tabella
@@ -131,29 +133,6 @@ void show_table(void) {
         usleep(TABLE_MICROSECONDS_REFRESH);
     }
 
-    // Mostra l'animazione durante la chiusura
-    int visual_step = 0;
-    while (socket_fd == 0) {
-        char loading_char;
-        switch (visual_step % 4) {
-            case 0:
-                loading_char = '/';
-                break;
-            case 1:
-                loading_char = '-';
-                break;
-            case 2:
-                loading_char = '\\';
-                break;
-            case 3:
-                loading_char = '|';
-                break;
-        }
-        wprintf(L" %s %-50c\r", "Chiusura in corso...", loading_char);
-        fflush(stdout);
-        visual_step = (visual_step + 1) % 4;
-        usleep(TABLE_MICROSECONDS_REFRESH / 7);
-    }
     wprintf(L"\n");
 }
 
@@ -242,6 +221,7 @@ void add_client_operation(const struct sock_info *client) {
  */
 void stop_status_table() {
     // socket_fd è già stata impostata a zero nel main a questo punto.
+    wprintf(L"\nChisura in corso...\n");
 
     // Chiudi tutti i file descriptor
     // Join tutti i thread
@@ -250,16 +230,22 @@ void stop_status_table() {
         if (item == NULL)
             continue;
 
-        if (pthread_join(item->thread_id, NULL) != 0)
-            perror("Join thread in chiusura");
+        // Sblocca il thread se era impegnato in una syscall bloccante (es: I/O con socket).
+        // Queste due funzioni, come scritto nel man, restituiscono il numero di errore,
+        // non restituendo -1 e poi sta in errno direttamente.
+        if ((errno = pthread_kill(item->thread_id, SIGINT)) != 0)
+            perror("pthread_kill in chiusura");
+
+        // Attendi la sua fine
+        if ((errno = pthread_join(item->thread_id, NULL)) != 0)
+            perror("pthread_join in chiusura");
 
         // La free degli elementi del vettore viene fatto dal thread,
         // che quando finisci invoca la remove_client()
     }
     free(connection_items);
 
-    // Interrompi anche l'animazione di chiusura
-    socket_fd = -1;
+    // Attendi anche l'interruzione della tabella
     pthread_join(table_thread, NULL);
 
     pthread_mutex_destroy(&mutex);

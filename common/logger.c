@@ -80,10 +80,12 @@ void log_message(const struct sock_info *client_info, const char *restrict forma
     funlockfile(stdout); // Accesso ai dati che riguardano l'output (come il log), sono in mutex
 
     // Stampa il messaggio nel file di log
-    // Qui ci interessa ottenere il lock sul file solo tra i thread
-    fwrite(log_line, sizeof(char), strlen(log_line), open_log_file());
-    fflush(open_log_file());
-    wprintf(L"%s", log_line);
+    if (open_log_file() != NULL) {
+        // Qui ci interessa ottenere il lock sul file solo tra i thread
+        fwrite(log_line, sizeof(char), strlen(log_line), open_log_file());
+        fflush(open_log_file());
+        wprintf(L"%s", log_line);
+    }
 }
 
 /**
@@ -119,11 +121,10 @@ void log_result(const struct sock_info *client_info,
 FILE *_open_log_file(const char *filename) {
     static FILE *log_file = NULL;
 
-    if (log_file == NULL) {
+    if (log_file == NULL && filename != NULL) {
         log_file = fopen(filename, "a");
-        // FIXME: il file di log deve essere lo stesso tra più esecuzioni del programma o può variare?
-        // FIXME: ci possono essere istanze multiple del server?
-        // FIXME: cerca il prossimo file libero e non bloccato (1), (2), (3), etc??
+        // TODO: cerca il prossimo file libero e non bloccato (1), (2), (3), (lock file try?)
+        // TODO: deve dire all'utente su che file sta scrivendo
     }
 
     return log_file;
@@ -180,5 +181,6 @@ void close_logging() {
         free(logs_array[i]);
 
     // Chiudi il file di log
-    fclose(open_log_file());
+    if (open_log_file() != NULL)
+        fclose(open_log_file());
 }

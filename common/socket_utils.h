@@ -9,11 +9,6 @@
 #define BACKLOG_SIZE 128
 
 /**
- * Tempo di attesa per poll() e quindi wait_until()
- */
-#define POLL_WAIT_TIMEOUT 3000
-
-/**
  * Raccogli le informazioni del client
  */
 struct sock_info {
@@ -35,23 +30,6 @@ struct sock_info {
  * @return Numero convertito, o 0 in caso di errore
  */
 uint16_t str_to_uint16(const char *str);
-
-/**
- * Resta in attesa di dati sul file descriptor.
- *
- * Utilizza poll()
- * (e non select(), per via delle limitazioni scritte nel man)
- * per:
- * - avere subito dati, se arrivano
- * - ogni intervallo di tempo, controllare se il running_flag
- *   indica ancora uno stato di esecuzione;
- *   in caso contrario, termina l'attesa.
- *
- * @param fd File descriptor da osservare
- * @param running_flag Flag che indica se continuare 
- *          ad ascoltare (= 1), o terminare (= 0).
- */
-void wait_until(int fd, const int *running_flag);
 
 /**
  * Elimina il \n o \r\n finali di una stringa ottenuta da una socket da getline.

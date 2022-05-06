@@ -43,7 +43,7 @@ int main(int argc, const char **argv) {
     // Inizializza log, connessione, etc
     const char *ip;
     uint16_t port;
-    if (main_init(argc, argv, "client.log", connect_to_server, &ip, &port) != 0)
+    if (main_init(argc, argv, NULL, connect_to_server, &ip, &port) != 0)
         return EXIT_FAILURE;
 
     // Gestisci i casi di SIGPIPE, che altrimenti di default terminano il programma

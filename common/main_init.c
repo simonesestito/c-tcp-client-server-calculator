@@ -57,7 +57,7 @@ int main_init(int argc, const char **argv, const char *log_filename, socket_init
     handle_signal(SIGQUIT, _handle_exit);
 
     // Mostra il messaggio di avvio nel log
-    if (log_new_start(log_filename) == -1)
+    if (log_filename != NULL && log_new_start(log_filename) == -1)
         return EXIT_FAILURE;
 
     // Ottieni la porta e l'indirizzo scelti dall'utente
