@@ -85,7 +85,7 @@ FILE *_open_log_file(const char *filename) {
     if (log_file == NULL && filename != NULL) {
         log_file = fopen(filename, "a");
         // TODO: cerca il prossimo file libero e non bloccato (1), (2), (3), (lock file try?)
-        // TODO: deve dire all'utente su che file sta scrivendo
+        // TODO: deve dire al chiamante e all'utente su che file sta scrivendo
     }
 
     return log_file;

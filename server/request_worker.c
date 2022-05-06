@@ -28,11 +28,7 @@ void elaborate_request(const struct sock_info *client_info) {
     register_client(client_info, pthread_self());
 
     do {
-        // Ottieni la riga dell'operazione,
-        // aspettando dati e vedendo se serve interrompere
-        // FIXME wait_until(fileno(client_info->socket_file), &socket_fd);
-        // FIXME if (socket_fd <= 0) break;
-
+        // Ottieni la riga dell'operazione, può essere interrotto con SIGINT al thread
         chars_read = getline(&line, &line_size, client_info->socket_file);
         if (chars_read < 0) break;
 
