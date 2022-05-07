@@ -2,6 +2,7 @@
 #define HW2_TIMESTAMP_H
 
 #include <time.h>
+#include <stdint.h>
 
 /**
  * Dimensione della stringa per il solo tempo
@@ -16,7 +17,7 @@
 /**
  * Formato della stringa per il tempo fino ai secondi
  */
-#define TIME_STRING_FORMAT "%02d/%02d/%d %02d:%02d:%02d"
+#define TIME_STRING_FORMAT "%02d/%02d/%04d %02d:%02d:%02d"
 
 /**
  * Formato della stringa per il timestamp completo
@@ -27,7 +28,7 @@
  * Dimensione massima della stringa di differenza di timestamp.
  * [00h 00m 00s 0000000us]
  */
-#define TIMEDIFF_STRING_SIZE 22
+#define TIMEDIFF_STRING_SIZE 21
 
 /**
  * Formato della stringa di differenza di timestamp
@@ -46,7 +47,7 @@ struct timestamp {
     /**
      * Aggiungi informazioni sui microsecondi
      */
-    long microseconds;
+    uint64_t microseconds;
 };
 
 /**

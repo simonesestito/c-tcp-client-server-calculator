@@ -1,6 +1,5 @@
 #include "request_worker.h"
 #include "../common/logger.h"
-#include "../common/timestamp.h"
 #include "../common/main_init.h"
 #include "live_status_table.h"
 #include <stdio.h>
@@ -48,14 +47,14 @@ void elaborate_request(const struct sock_info *client_info) {
             log_message(client_info, "Errore nel parsing dell'operazione\n");
             errno = 0;
             // Segnala l'errore al client, inviando una linea col solo errore
-            fprintf(client_info->socket_file, "-Errore del client\n");
+            fprintf(client_info->socket_file, "%cErrore del client\n", SERVER_ERROR_MESSAGE_PREFIX);
         } else {
             result = calculate_operation(left_operand, operator, right_operand);
             if (errno == EINVAL) {
                 log_errno(client_info, "Operazione sconosciuta");
                 errno = 0;
                 // Segnala l'errore al client, inviando una linea che inizia per -
-                fprintf(client_info->socket_file, "-Operazione sconosciuta\n");
+                fprintf(client_info->socket_file, "%cOperazione sconosciuta\n", SERVER_ERROR_MESSAGE_PREFIX);
             } else {
                 // Conteggia una nuova operazione nel live status
                 add_client_operation(client_info);
@@ -74,7 +73,7 @@ void elaborate_request(const struct sock_info *client_info) {
                 timestamp_to_string(&end_time, end_time_str);
                 fprintf(client_info->socket_file, "%s %s %lf\n", start_time_str, end_time_str, result);
             }
-            
+
             fflush(client_info->socket_file);
         }
     } while (chars_read > 0 && errno == 0);

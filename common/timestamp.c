@@ -1,4 +1,5 @@
 #include "timestamp.h"
+#include "logger.h"
 #include <stdio.h>
 
 /**
@@ -23,13 +24,16 @@ void get_timestamp(struct timestamp *timestamp) {
  * @param str Stringa dove scrivere
  */
 void time_to_string(const struct tm *time, char *str) {
-    snprintf(str, TIME_STRING_SIZE, TIME_STRING_FORMAT,
+    int printed_chars = snprintf(str, TIME_STRING_SIZE, TIME_STRING_FORMAT,
              time->tm_mday,
              time->tm_mon + 1,
              time->tm_year + 1900,
              time->tm_hour,
              time->tm_min,
              time->tm_sec);
+    if (printed_chars < TIME_STRING_SIZE - 1) {
+        log_message(NULL, "Errore di conversione del tempo in stringa: %d < %d\n", printed_chars, TIME_STRING_SIZE-1);
+    }
 }
 
 /**
@@ -39,7 +43,7 @@ void time_to_string(const struct tm *time, char *str) {
  * @param str Stringa dove scrivere
  */
 void timestamp_to_string(const struct timestamp *timestamp, char *str) {
-    snprintf(str, TIMESTAMP_STRING_SIZE, TIMESTAMP_STRING_FORMAT,
+    int printed_chars = snprintf(str, TIMESTAMP_STRING_SIZE, TIMESTAMP_STRING_FORMAT,
              timestamp->time.tm_mday,
              timestamp->time.tm_mon + 1,
              timestamp->time.tm_year + 1900,
@@ -47,6 +51,9 @@ void timestamp_to_string(const struct timestamp *timestamp, char *str) {
              timestamp->time.tm_min,
              timestamp->time.tm_sec,
              timestamp->microseconds);
+    if (printed_chars < TIMESTAMP_STRING_SIZE - 1) {
+        log_message(NULL, "Errore di conversione del timestamp in stringa: %d < %d\n", printed_chars, TIMESTAMP_STRING_SIZE-1);
+    }
 }
 
 /**
@@ -104,12 +111,16 @@ void timediff_to_string(const struct timestamp *from, const struct timestamp *to
     uint64_t from_micros = timestamp_to_micros(from);
     uint64_t to_micros = timestamp_to_micros(to);
     uint64_t diff_micros = to_micros > from_micros
-        ? to_micros - from_micros
-        : from_micros - to_micros;
+                           ? to_micros - from_micros
+                           : from_micros - to_micros;
 
-    snprintf(str, TIMEDIFF_STRING_SIZE, TIMEDIFF_STRING_FORMAT,
-            diff_micros/(1000000ul*60ul*60ul),
-            (diff_micros/(1000000ul*60ul)) % 60ul,
-            (diff_micros/1000000ul) % 60ul,
-            diff_micros % 1000000ul);
+    int printed_chars = snprintf(str, TIMEDIFF_STRING_SIZE, TIMEDIFF_STRING_FORMAT,
+             diff_micros / (1000000ul * 60ul * 60ul),
+             (diff_micros / (1000000ul * 60ul)) % 60ul,
+             (diff_micros / 1000000ul) % 60ul,
+             diff_micros % 1000000ul);
+
+    if (printed_chars < TIMEDIFF_STRING_SIZE - 1) {
+        log_message(NULL, "Errore di conversione del timediff in stringa: %d < %d\n", printed_chars, TIMEDIFF_STRING_SIZE-1);
+    }
 }

@@ -34,7 +34,7 @@
 /**
  * Ultimi messaggi di log scritti nel file
  */
-extern char* logs_array[LOGS_ARRAY_SIZE];
+extern char *logs_array[LOGS_ARRAY_SIZE];
 
 /**
  * Indice da cui iniziare a leggere nel vettore circolare dei log
@@ -98,7 +98,7 @@ int log_new_start(const char *filename);
  *
  * @return File pointer al log
  */
-FILE* open_log_file();
+FILE *open_log_file();
 
 /**
  * Termina tutte le operazioni di log, chiudi il file e libera la memoria

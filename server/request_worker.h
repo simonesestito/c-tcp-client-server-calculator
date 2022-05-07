@@ -16,5 +16,4 @@
 void elaborate_request(const struct sock_info *client_info);
 
 
-
 #endif //SERVER_REQUEST_WORKER_H

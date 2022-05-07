@@ -74,11 +74,11 @@ int reconnect_exponential(const char *ip, uint16_t port) {
                     loading_char = '|';
                     break;
             }
-            wprintf(L" Tentativo di riconnessione tra %u secondi %-5c\r", delay_seconds - i / 8, loading_char);
+            wprintf(L" Tentativo di ri-connessione tra %u secondi %-5c\r", delay_seconds - i / 8, loading_char);
             fflush(stdout);
             usleep(125000 /* 1/8 secondi */);
         }
-        wprintf(L"Tentativo di riconnessione... %-15c\n", ' ');
+        wprintf(L"Tentativo di ri-connessione... %-15c\n", ' ');
 
         // Connessione...
         reconnect_fd = connect_to_server(ip, port);

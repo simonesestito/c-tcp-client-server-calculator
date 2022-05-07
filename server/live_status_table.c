@@ -57,7 +57,7 @@ void show_table(void) {
         // Leggi orario attuale
         struct timestamp current_time;
         get_timestamp(&current_time);
-        long current_seconds = timestamp_to_micros(&current_time) / 1000000;
+        uint64_t current_seconds = timestamp_to_micros(&current_time) / 1000000;
 
         // Pulisci schermo
         wprintf(L"\e[1;1H\e[2J");
@@ -146,8 +146,8 @@ void show_table(void) {
  */
 void init_status_table() {
     pthread_mutex_init(&mutex, NULL);
-    pthread_create(&table_thread, NULL, (void *(*) (void *)) show_table, NULL);
-    connection_items = calloc(connection_items_size, sizeof(struct live_status_item*));
+    pthread_create(&table_thread, NULL, (void *(*)(void *)) show_table, NULL);
+    connection_items = calloc(connection_items_size, sizeof(struct live_status_item *));
 }
 
 /**
@@ -158,11 +158,11 @@ void init_status_table() {
  */
 void register_client(const struct sock_info *client, pthread_t thread_id) {
     pthread_mutex_lock(&mutex);
-    
+
     // Leggi orario attuale
     struct timestamp current_time;
     get_timestamp(&current_time);
-    long current_seconds = timestamp_to_micros(&current_time) / 1000000;
+    uint64_t current_seconds = timestamp_to_micros(&current_time) / 1000000;
 
     // Crea la struttura
     struct live_status_item *item = malloc(sizeof(struct live_status_item));
@@ -177,7 +177,7 @@ void register_client(const struct sock_info *client, pthread_t thread_id) {
     if (i == connection_items_size) {
         // Aumenta lo spazio allocato
         connection_items_size *= 2;
-        connection_items = realloc(connection_items, connection_items_size * sizeof(struct live_status_item*));
+        connection_items = realloc(connection_items, connection_items_size * sizeof(struct live_status_item *));
     }
     connection_items[i] = item;
 
@@ -236,7 +236,7 @@ void stop_status_table() {
     // Chiudi tutti i file descriptor
     // Join tutti i thread
     for (size_t i = 0; i < connection_items_size; i++) {
-        struct live_status_item* item = connection_items[i];
+        struct live_status_item *item = connection_items[i];
         if (item == NULL)
             continue;
 

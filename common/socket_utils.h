@@ -7,6 +7,7 @@
 #define DEFAULT_PORT 12345
 #define DEFAULT_HOST "127.0.0.1"
 #define BACKLOG_SIZE 128
+#define SERVER_ERROR_MESSAGE_PREFIX '-'
 
 /**
  * Raccogli le informazioni del client

@@ -62,9 +62,6 @@ unsigned int max(const unsigned int *data, size_t data_len) {
  * @param data_len Dimensione dei dati
  */
 void plot_chart(const unsigned int *original_data, size_t data_len) {
-    // Pulisci schermo
-    wprintf(L"\e[1;1H\e[2J");
-
     // Ottieni la larghezza del terminale
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
@@ -130,7 +127,7 @@ void plot_chart(const unsigned int *original_data, size_t data_len) {
     }
 
     wprintf(L"%lc", CORNER_BOTTOM_LEFT);
-    for (int i = 0; i < max_columns*2; i++)
+    for (int i = 0; i < max_columns * 2; i++)
         wprintf(L"%lc", HORIZONTAL_BAR);
     wprintf(L">\n");
 }

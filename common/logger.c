@@ -76,7 +76,7 @@ void log_result(const struct sock_info *client_info,
     timestamp_to_string(start_time, start_time_str);
 
     log_message(client_info,
-                "%s = %lf, da %s per %luus\n",
+                "%s = %lf, da %s per %lu us\n",
                 operation_line,
                 result,
                 start_time_str,
@@ -155,18 +155,14 @@ int log_new_start(const char *filename) {
     if (log_file == NULL)
         return -1;
 
-    time_t current_time = time(NULL);
-    struct tm current_date = *localtime(&current_time);
+    struct timestamp current_time;
+    get_timestamp(&current_time);
+    char time_str[TIME_STRING_SIZE];
+    time_to_string((const struct tm *) &current_time, time_str);
 
     log_message(NULL, "===================================\n");
     log_message(NULL, "=========== Nuovo avvio ===========\n");
-    log_message(NULL, "======= %02d/%02d/%d %02d:%02d:%02d =======\n",
-            current_date.tm_mday,
-            current_date.tm_mon + 1,
-            current_date.tm_year + 1900,
-            current_date.tm_hour,
-            current_date.tm_min,
-            current_date.tm_sec);
+    log_message(NULL, "======= %s =======\n", time_str);
     log_message(NULL, "===================================\n");
 
     // Comunica all'utente su che file di log stiamo scrivendo
