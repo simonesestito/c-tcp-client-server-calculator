@@ -8,6 +8,9 @@
 #include <errno.h>
 #include <pthread.h>
 
+int parse_client_line(const struct sock_info *client_info, char *line, char *operator, operand_t *left_operand,
+                      operand_t *right_operand, operand_t *result);
+
 /**
  * Elabora la connessione / richiesta ricevuta dal client.
  *
@@ -42,40 +45,27 @@ void elaborate_request(const struct sock_info *client_info) {
         char operator;
         operand_t left_operand, right_operand;
         operand_t result;
-        if (sscanf(line, "%c %lf %lf", &operator, &left_operand, &right_operand) < 3) { // NOLINT(cert-err34-c)
-            // Errore nella lettura
-            log_message(client_info, "Errore nel parsing dell'operazione\n");
-            errno = 0;
-            // Segnala l'errore al client, inviando una linea col solo errore
-            fprintf(client_info->socket_file, "%cErrore del client\n", SERVER_ERROR_MESSAGE_PREFIX);
-        } else {
-            result = calculate_operation(left_operand, operator, right_operand);
-            if (errno == EINVAL) {
-                log_errno(client_info, "Operazione sconosciuta");
-                errno = 0;
-                // Segnala l'errore al client, inviando una linea che inizia per -
-                fprintf(client_info->socket_file, "%cOperazione sconosciuta\n", SERVER_ERROR_MESSAGE_PREFIX);
-            } else {
-                // Conteggia una nuova operazione nel live status
-                add_client_operation(client_info);
 
-                // Termina il conteggio del tempo
-                get_timestamp(&end_time);
+        if (parse_client_line(client_info, line, &operator, &left_operand, &right_operand, &result) == 0) {
+            // Conteggia una nuova operazione nel live status
+            add_client_operation(client_info);
 
-                // Tieni traccia nel log
-                log_result(client_info, line, result, &start_time, &end_time);
+            // Termina il conteggio del tempo
+            get_timestamp(&end_time);
 
-                // Invia la risposta al client
-                // [timestamp ricezione richiesta, timestamp invio risposta, risultato operazione]
-                char start_time_str[TIMESTAMP_STRING_SIZE] = {};
-                char end_time_str[TIMESTAMP_STRING_SIZE] = {};
-                timestamp_to_string(&start_time, start_time_str);
-                timestamp_to_string(&end_time, end_time_str);
-                fprintf(client_info->socket_file, "%s %s %lf\n", start_time_str, end_time_str, result);
-            }
+            // Tieni traccia nel log
+            log_result(client_info, line, result, &start_time, &end_time);
 
-            fflush(client_info->socket_file);
+            // Invia la risposta al client
+            // [timestamp ricezione richiesta, timestamp invio risposta, risultato operazione]
+            char start_time_str[TIMESTAMP_STRING_SIZE] = {};
+            char end_time_str[TIMESTAMP_STRING_SIZE] = {};
+            timestamp_to_string(&start_time, start_time_str);
+            timestamp_to_string(&end_time, end_time_str);
+            fprintf(client_info->socket_file, "%s %s %lf\n", start_time_str, end_time_str, result);
         }
+
+        fflush(client_info->socket_file);
     } while (chars_read > 0 && errno == 0);
 
     if (errno != 0 && working) {
@@ -88,4 +78,40 @@ void elaborate_request(const struct sock_info *client_info) {
     fclose(client_info->socket_file);
     free((struct sock_info *) client_info);
     pthread_detach(pthread_self());
+}
+
+/**
+ * Esegui il parsing della stringa del client, gestendo gli errori e i calcoli
+ *
+ * @param client_info Informazioni sul client
+ * @param line Linea ricevuta dal client
+ * @param operator Operatore estratto dalla stringa
+ * @param left_operand Operando sinistro estratto dalla stringa
+ * @param right_operand Operando destro estratto dalla stringa
+ * @param result Risultato dell'operazione
+ * @return -1 in caso di errore, 0 altrimenti
+ */
+int parse_client_line(const struct sock_info *client_info, char *line, char *operator, operand_t *left_operand,
+                      operand_t *right_operand, operand_t *result) {
+
+    if (sscanf(line, "%c %lf %lf", operator, left_operand, right_operand) < 3) { // NOLINT(cert-err34-c)
+        // Errore nella lettura
+        log_message(client_info, "Errore nel parsing dell'operazione\n");
+        errno = 0;
+        // Segnala l'errore al client, inviando una linea col solo errore
+        fprintf(client_info->socket_file, "%cErrore del client\n", SERVER_ERROR_MESSAGE_PREFIX);
+        return -1;
+    }
+
+    // Esegui il calcolo
+    *result = calculate_operation(*left_operand, *operator, *right_operand);
+    if (errno == EINVAL) {
+        log_errno(client_info, "Operazione sconosciuta");
+        errno = 0;
+        // Segnala l'errore al client, inviando una linea che inizia per -
+        fprintf(client_info->socket_file, "%cOperazione sconosciuta\n", SERVER_ERROR_MESSAGE_PREFIX);
+        return -1;
+    }
+
+    return 0;
 }
