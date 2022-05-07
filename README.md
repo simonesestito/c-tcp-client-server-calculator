@@ -9,6 +9,10 @@ https://docs.google.com/document/d/1wvmyqr00D5ji17bgRmExp-Cw1zBNhOeZGMd4L--hdE8/
 
 This program uses a Makefile. You can simply run the `make` command, then run the `./client` or `./server` executable.
 
+## Screenshot
+
+[![Screenshot](https://i.postimg.cc/1zJS5Wwn/Immagine-2022-05-07-105212.png)](https://postimg.cc/nsjg3Gdp)
+
 ## Demo video
 
 # TODO
