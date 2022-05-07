@@ -42,6 +42,12 @@ void do_server_operations(FILE *socket_input, FILE *socket_output, operand_t *le
                           char *operator);
 
 int main(int argc, const char **argv) {
+    // Disattiva fdsan per fare dei test su Android
+#if __has_include(<android/fdsan.h>)
+#include <android/fdsan.h>
+    android_fdsan_set_error_level(ANDROID_FDSAN_ERROR_LEVEL_DISABLED);
+#endif
+
     // Inizializza log, connessione, etc
     const char *ip;
     uint16_t port;
@@ -69,9 +75,8 @@ int main(int argc, const char **argv) {
         // Apri il socket file descriptor come FILE pointer per usare funzioni
         // di libreria come fprintf e fscanf.
 
-        // FIXME: rimuovere dup(), solo per fdsan
         FILE *socket_input = fdopen(socket_fd, "r");
-        FILE *socket_output = fdopen(dup(socket_fd), "w");
+        FILE *socket_output = fdopen(socket_fd, "w");
 
         if (socket_input == NULL || socket_output == NULL) {
             perror("fdopen");
