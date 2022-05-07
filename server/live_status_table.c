@@ -3,10 +3,9 @@
 #include "../common/logger.h"
 #include "../common/main_init.h"
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
 #include <wchar.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 #include <signal.h>
 #include <errno.h>
 
@@ -36,10 +35,16 @@ struct live_status_item **connection_items = NULL;
 size_t connection_items_size = 1;
 
 /**
- * Semaforo per la mutua esclusione nella sezione critica.
- * Regola l'accesso al vettore.
+ * Mutua esclusione nella sezione critica.
+ * Regola l'accesso al vettore e alla pthread_cond_t.
  */
 pthread_mutex_t mutex;
+
+/**
+ * Condizione per il refresh della tabella.
+ * Di norma avviene comunque una volta al secondo.
+ */
+pthread_cond_t refresh_cond;
 
 /**
  * Thread per la visualizzazione della tabella
@@ -51,13 +56,26 @@ pthread_t table_thread;
  * Si aggiorna ogni intervallo di millisecondi.
  */
 void show_table(void) {
+    // Tempo massimo tra un refresh e l'altro
+    struct timespec time_to_wait = {0, 0};
+
     while (socket_fd > 0) {
+        // Attendi non piú di un secondo
+        time_to_wait.tv_sec = time(NULL) + 1;
         pthread_mutex_lock(&mutex);
+        pthread_cond_timedwait(&refresh_cond, &mutex, &time_to_wait);
+        if (socket_fd <= 0) {
+            // Esci in ogni caso
+            pthread_mutex_unlock(&mutex);
+            continue;
+        }
 
         // Leggi orario attuale
         struct timestamp current_time;
         get_timestamp(&current_time);
         uint64_t current_seconds = timestamp_to_micros(&current_time) / 1000000;
+
+        flockfile(stdout);
 
         // Pulisci schermo
         wprintf(L"\e[1;1H\e[2J");
@@ -122,10 +140,7 @@ void show_table(void) {
         for (int i = 0; i < 5; i++) wprintf(L"%lc", HORIZONTAL_BAR);
         wprintf(L"%lc\n", CORNER_BOTTOM_RIGHT);
 
-        fflush(stdout);
-
         // Scrivi le ultime righe del log
-        flockfile(stdout);
         for (int i = 0; i < LOGS_ARRAY_SIZE; i++) {
             // Leggi dal vettore circolare
             int real_index = (logs_index + i) % LOGS_ARRAY_SIZE;
@@ -135,7 +150,6 @@ void show_table(void) {
         funlockfile(stdout);
 
         pthread_mutex_unlock(&mutex);
-        usleep(TABLE_MICROSECONDS_REFRESH);
     }
 
     wprintf(L"\n");
@@ -146,6 +160,7 @@ void show_table(void) {
  */
 void init_status_table() {
     pthread_mutex_init(&mutex, NULL);
+    pthread_cond_init(&refresh_cond, NULL);
     pthread_create(&table_thread, NULL, (void *(*)(void *)) show_table, NULL);
     connection_items = calloc(connection_items_size, sizeof(struct live_status_item *));
 }
@@ -181,6 +196,7 @@ void register_client(const struct sock_info *client, pthread_t thread_id) {
     }
     connection_items[i] = item;
 
+    pthread_cond_signal(&refresh_cond);
     pthread_mutex_unlock(&mutex);
 }
 
@@ -202,6 +218,7 @@ void remove_client(const struct sock_info *client) {
         }
     }
 
+    pthread_cond_signal(&refresh_cond);
     pthread_mutex_unlock(&mutex);
 }
 
@@ -221,6 +238,7 @@ void add_client_operation(const struct sock_info *client) {
         }
     }
 
+    pthread_cond_signal(&refresh_cond);
     pthread_mutex_unlock(&mutex);
 }
 
@@ -258,5 +276,6 @@ void stop_status_table() {
     // Attendi anche l'interruzione della tabella
     pthread_join(table_thread, NULL);
 
+    pthread_cond_destroy(&refresh_cond);
     pthread_mutex_destroy(&mutex);
 }

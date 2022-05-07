@@ -4,11 +4,6 @@
 #include "../common/socket_utils.h"
 
 /**
- * Microsecondi dopo cui si deve aggiornare la tabella
- */
-#define TABLE_MICROSECONDS_REFRESH (500 * 1000)
-
-/**
  * Informazioni riguardo una connessione con un client,
  * e tutti i dettagli che verranno visualizzati
  * nella tabella di stato del server, come panoramica.
