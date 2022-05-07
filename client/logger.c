@@ -1,7 +1,5 @@
 #include "../common/logger.h"
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
 
 /**
  * Esegui il log, inserendo anche le informazioni sul client.

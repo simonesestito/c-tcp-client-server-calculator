@@ -2,7 +2,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <poll.h>
 
 /**
  * Converti una stringa in un numero intero senza segno a 16 bit

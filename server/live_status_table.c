@@ -231,7 +231,7 @@ void add_client_operation(const struct sock_info *client) {
  */
 void stop_status_table() {
     // socket_fd è già stata impostata a zero nel main a questo punto.
-    wprintf(L"\nChisura in corso...\n");
+    wprintf(L"\nChiusura in corso...\n");
 
     // Chiudi tutti i file descriptor
     // Join tutti i thread

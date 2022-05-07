@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <signal.h>
-#include <errno.h>
-#include <unistd.h>
 #include "../common/calc_utils.h"
 #include "../common/main_init.h"
 #include "../common/logger.h"

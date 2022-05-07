@@ -70,8 +70,8 @@ void log_result(const struct sock_info *client_info,
                 operand_t result,
                 const struct timestamp *start_time,
                 const struct timestamp *end_time) {
-    long start_microseconds = start_time->microseconds;
-    long end_microseconds = end_time->microseconds;
+    uint64_t start_microseconds = start_time->microseconds;
+    uint64_t end_microseconds = end_time->microseconds;
     char start_time_str[TIMESTAMP_STRING_SIZE] = {};
     timestamp_to_string(start_time, start_time_str);
 

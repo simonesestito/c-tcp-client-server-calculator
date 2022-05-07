@@ -1,6 +1,41 @@
 #include "calc_utils.h"
 #include <errno.h>
-#include <time.h>
+
+/**
+ * Trova il numero minimo dall'array, non vuoto
+ * @param data Array in cui trovare il minimo
+ * @param data_len Dimensione dell'array
+ * @return Il minimo numero trovato, o zero.
+ */
+unsigned int min(const unsigned int *data, size_t data_len) {
+    if (data_len == 0)
+        return 0;
+
+    unsigned int min_number = data[0];
+    for (size_t i = 1; i < data_len; i++) {
+        if (data[i] < min_number)
+            min_number = data[i];
+    }
+    return min_number;
+}
+
+/**
+ * Trova il numero massimo dall'array, non vuoto
+ * @param data Array in cui trovare il minimo
+ * @param data_len Dimensione dell'array
+ * @return Il massimo numero trovato
+ */
+unsigned int max(const unsigned int *data, size_t data_len) {
+    if (data_len == 0)
+        return 0;
+
+    unsigned long max_number = data[0];
+    for (int i = 1; i < data_len; i++) {
+        if (data[i] > max_number)
+            max_number = data[i];
+    }
+    return max_number;
+}
 
 /**
  * Elabora il calcolo richiesto dal client.
