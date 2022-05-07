@@ -7,7 +7,8 @@
 #include <errno.h>
 
 /**
- * Richiedi in input all'utente l'operazione da inviare al server
+ * Richiedi in input all'utente l'operazione da inviare al server.
+ * L'input deve essere su UNICA riga.
  *
  * @param left_operand Dove verrà memorizzato l'operando di sinistra
  * @param right_operand Dove verrà memorizzato l'operando di destra
@@ -15,29 +16,34 @@
  * @return 0 se i dati sono stati ottenuti, -1 in caso non sia possibile neanche riprovare
 */
 int get_user_input(operand_t *left_operand, operand_t *right_operand, char *operator) {
-    int values_read; // Valori letti da scanf
+    int values_read; // Valori letti da sscanf
+    char *read_line = NULL; // Linea d'input letta
+    size_t read_line_size = 0; // Dimensione della linea letta
     do {
         wprintf(L"\nPer uscire, premere CTRL+D\n");
         wprintf(L"Prossimo calcolo: ");
         fflush(stdout);
 
-        values_read = scanf("%lf %c %lf", left_operand, operator, right_operand);
+        // Leggi input da un'UNICA riga,
+        // così che se mancano delle parti, si può gestire in maniera
+        // migliore e molto più user-friendly.
+        ssize_t read_chars = getline(&read_line, &read_line_size, stdin);
+        if (read_chars < 0) {
+            values_read = EOF;
+        } else {
+            values_read = sscanf(read_line, "%lf %c %lf", left_operand, operator, right_operand);
+        }
 
         if (values_read == EOF) {
             // Non sarà mai più possibile avere input.
             wprintf(L"Chiusura in corso...\n");
-            return -1;
         } else if (values_read < 3) {
             // Input errato ma ancora è possibile riprovare
             wprintf(L"Input errato, riprovare.\n");
-
-            // Svuota buffer scanf
-            int ch;
-            while (((ch = getchar()) != '\n') && (ch != EOF));
         }
-    } while (values_read < 3);
+    } while (values_read != EOF && values_read < 3);
 
-    return 0;
+    return values_read == EOF ? -1 : 0;
 }
 
 /**
