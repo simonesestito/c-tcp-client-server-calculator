@@ -15,7 +15,7 @@ This program uses a Makefile. You can simply run the `make` command, then run th
 
 ## Demo video
 
-https://drive.google.com/file/d/1BP5Vjgu9lX6C840ASDgObHnrufADhbUU/view?usp=sharing
+https://drive.google.com/file/d/1CDYtjj1QOJpso1sdON9eL4AFrcJC6sEU/view?usp=sharing
 
 ## License
 
