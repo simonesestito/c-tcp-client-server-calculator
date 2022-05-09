@@ -94,7 +94,7 @@ int main(int argc, const char **argv) {
     close_logging();
     // Se la socket è chiusa, dopo i vari tentativi, e l'utente NON ha dato CTRL+D,
     // considerala come un'esecuzione fallimentare.
-    return socket_fd <= 0 && working && !feof(stdout) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return socket_fd < 0 && !feof(stdout) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 /**
